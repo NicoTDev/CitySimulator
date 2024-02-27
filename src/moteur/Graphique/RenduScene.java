@@ -28,8 +28,11 @@ public class RenduScene {
 
         //creer l'uniforms
         uniformsMap = new UniformsMap(shaderChargeur.getIdProgramme());
+        uniformsMap.creerUniform("matriceVue");
+        uniformsMap.creerUniform("txtSample");
         uniformsMap.creerUniform("matriceProjection");
         uniformsMap.creerUniform("matriceModel");
+        uniformsMap.creerUniform("material.diffuse");
     }
 
     public void detruireProgramme() {
@@ -40,17 +43,29 @@ public class RenduScene {
         shaderChargeur.utiliser();
 
         uniformsMap.setUniform("matriceProjection", scene.getProjection().getMatriceProjection());
+        uniformsMap.setUniform("matriceVue",scene.getCamera().getMatriceVue());
+        uniformsMap.setUniform("txtSample",0);
 
         Collection<Model> models = scene.getDicoModel().values();
+        TextureCache textureCache = scene.getTextureCache();
         for (Model model : models) {
-            model.getMeshes().forEach(mesh -> {
-                glBindVertexArray(mesh.getIdVao());
-                List<Entite> entites = model.getEntites();
-                for (Entite entite : entites) {
-                    uniformsMap.setUniform("matriceModel", entite.getMatriceModel());
-                    glDrawElements(GL_TRIANGLES, mesh.getNumVerticles(),GL_UNSIGNED_INT,0);
+
+            List<Entite> entites = model.getEntites();
+
+            for (Material material : model.getMateriaux()) {
+                uniformsMap.setUniform("material.diffuse",material.getCouleurDiffuse());
+                Texture texture = textureCache.getTexture(material.getCheminTexture());
+                glActiveTexture(GL_TEXTURE0);
+                texture.lier();
+
+                for (Mesh mesh : material.getMeshList()) {
+                    glBindVertexArray(mesh.getIdVao());
+                    for (Entite entite : entites) {
+                        uniformsMap.setUniform("matriceModel",entite.getMatriceModel());
+                        glDrawElements(GL_TRIANGLES, mesh.getNumVerticles(), GL_UNSIGNED_INT, 0);
+                    }
                 }
-            });
+            }
         }
 
         glBindVertexArray(0);

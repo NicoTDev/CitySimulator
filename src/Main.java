@@ -1,12 +1,17 @@
+import jeu.Terrain;
 import moteur.*;
-import moteur.Graphique.Mesh;
-import moteur.Graphique.Model;
-import moteur.Graphique.Rendu;
+import moteur.Graphique.*;
+import moteur.scene.Camera;
 import moteur.scene.Entite;
 import moteur.scene.Scene;
-
+import org.joml.Vector2f;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
+import java.awt.event.MouseAdapter;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.Math.sin;
 
 /**
  * Classe Main à lancer au démarrage
@@ -14,7 +19,13 @@ import java.util.List;
 public class Main implements ILogiqueJeu {
 
 
-    private Entite cubeEntity;
+    private Entite entite;
+
+    private Terrain terrain;
+
+    private static final float VITESSE = 0.050f;
+
+    private static final float SENSIBILITE = 0.05f;
 
     private float rotation = 0;
 
@@ -31,13 +42,43 @@ public class Main implements ILogiqueJeu {
     }
 
     /**
-     * Méthode lancée une fois au démarrage du jeu
+     * Méthode lancée une fois au démarrage du jeu pour créer la scène
      * @param fenetre
      * @param scene
      * @param rendu
      */
     @Override
     public void initialisation(Fenetre fenetre, Scene scene, Rendu rendu) {
+
+        Model cubeModel = ModelLoader.loadModel("cubeModel", "ressources/models/cube/cube.obj", scene.getTextureCache());
+        scene.ajouterModel(cubeModel);
+
+
+        //créer le model des arbres
+        Model arbreModel = ModelLoader.loadModel("arbre-model","ressources/models/arbre/Arbre.obj", scene.getTextureCache());
+        scene.ajouterModel(arbreModel);
+
+        //pour le moment, la carte est créé à partir de cube, cela va changer plus tard
+        final int TAILLECARTE = 30;
+
+
+        for (int i = 0 ; i < TAILLECARTE ; i++) {
+            for (int j = 0 ; j < TAILLECARTE ; j++) {
+
+                int hauteur = (int) (sin(i)+sin(j));
+                Entite cube = new Entite("cube"+j+i, cubeModel.getId());
+                cube.setPosition(i - (TAILLECARTE/2), hauteur, j - (TAILLECARTE/2));
+
+                if ( (int) (Math.random()*100) >= 99) {
+                    Entite arbreEntite = new Entite("arbreEntite-"+i, arbreModel.getId());
+                    arbreEntite.setPosition(i - (TAILLECARTE / 2), hauteur + 0.5f, j - (TAILLECARTE / 2));
+                    scene.ajouterEntite(arbreEntite);
+                }
+                scene.ajouterEntite(cube);
+            }
+        }
+
+
     }
 
     /**
@@ -45,21 +86,48 @@ public class Main implements ILogiqueJeu {
      * @param fenetre
      * @param scene
      * @param diffTempsMillis
-     * @param inputConsomme
      */
     @Override
-    public void entree(Fenetre fenetre, Scene scene, long diffTempsMillis, boolean inputConsomme) {
+    public void entree(Fenetre fenetre, Scene scene, long diffTempsMillis) {
+        float mouvement = diffTempsMillis * VITESSE;
+        Camera camera = scene.getCamera();
+
+        //gérer les entrés de la caméra
+        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_W)) {
+            camera.avancer(mouvement);
+        }
+        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_S))
+            camera.reculer(mouvement);
+        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_A))
+            camera.allerGauche(mouvement);
+        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_D))
+            camera.allerDroite(mouvement);
+        if(fenetre.isToucheAppuye(GLFW.GLFW_KEY_SPACE))
+            camera.monter(mouvement);
+        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_LEFT_SHIFT))
+            camera.descendre(mouvement);
+
+        EntreSouris entreSouris = fenetre.getEntreSouris();
+        if (entreSouris.isBoutonDroitPresse()) {
+            Vector2f vectDisp = entreSouris.getVectDisp();
+            camera.rotationner((float) Math.toRadians(-vectDisp.x*SENSIBILITE),
+                    (float) Math.toRadians(-vectDisp.y*SENSIBILITE));
+        }
+
+
+
 
     }
 
     /**
-     * Méthode lancée chaque
-     * @param fenetre
-     * @param scene
+     * Méthode lancée chaque rafraichissement de l'écran
+     * @param fenetre ref de la fenetre
+     * @param scene ref de la scène
      * @param diffTempsMillis
      */
     @Override
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
+
 
     }
 }

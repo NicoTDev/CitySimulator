@@ -30,7 +30,7 @@ public class Entite {
         taille = 1;
     }
 
-    public String getId() {
+    public String getIdEntite() {
         return id;
     }
     public String getIdModel() {
@@ -57,14 +57,17 @@ public class Entite {
         position.x = x;
         position.y = y;
         position.z = z;
+        mettreAJour();
     }
 
     public void setRotation(float x, float y, float z, float angle) {
         this.rotation.fromAxisAngleRad(x,y,z,angle);
+        mettreAJour();
     }
 
     public void setTaille(float taille) {
         this.taille = taille;
+        mettreAJour();
     }
 
     public void mettreAJour() {

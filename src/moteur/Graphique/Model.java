@@ -13,11 +13,11 @@ public class Model {
     private final String id;
     private List<Entite> entites;
 
-    private List<Mesh> meshes;
+    private List<Material> materiaux;
 
-    public Model(String id, List<Mesh> meshes) {
+    public Model(String id, List<Material> materiaux) {
         this.id = id;
-        this.meshes = meshes;
+        this.materiaux = materiaux;
         entites = new ArrayList<>();
     }
 
@@ -27,8 +27,8 @@ public class Model {
         return entites;
     }
 
-    public List<Mesh> getMeshes() {
-        return meshes;
+    public List<Material> getMateriaux() {
+        return materiaux;
     }
 
     public String getId() {return id;}

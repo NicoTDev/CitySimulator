@@ -51,18 +51,18 @@ public class Mesh {
             glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
 
 
-            //buffer de couleur
+            //buffer de Texture
             idVbo = glGenBuffers();
             vbosId.add(idVbo);
-            FloatBuffer bufferCouleurs = stack.callocFloat(textCoords.length);
-            bufferCouleurs.put(0,textCoords);
+            FloatBuffer bufferText = stack.callocFloat(textCoords.length);
+            bufferText.put(0,textCoords);
             glBindBuffer(GL_ARRAY_BUFFER,idVbo);
-            glBufferData(GL_ARRAY_BUFFER,bufferCouleurs, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER,bufferText, GL_STATIC_DRAW);
             glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1,3,GL_FLOAT,false,0,0);
+            glVertexAttribPointer(1,2,GL_FLOAT,false,0,0);
 
 
-            //faire la meme chose avec le vbo d'index
+            //créer la meme chose avec le vbo d'indices
             idVbo = glGenBuffers();
             vbosId.add(idVbo);
             IntBuffer bufferDindices = stack.callocInt(indices.length);
@@ -72,8 +72,6 @@ public class Mesh {
 
             glBindBuffer(GL_ARRAY_BUFFER,0);
             glBindVertexArray(0);
-
-            //créer la meme chose avec le vbo d'indices
 
         }
 

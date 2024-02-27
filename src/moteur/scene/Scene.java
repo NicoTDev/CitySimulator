@@ -2,6 +2,7 @@ package moteur.scene;
 
 import moteur.Graphique.Mesh;
 import moteur.Graphique.Model;
+import moteur.Graphique.TextureCache;
 import moteur.Moteur;
 import org.lwjgl.system.Pointer;
 
@@ -17,10 +18,16 @@ public class Scene {
 
     private Projection projection;
 
+    private Camera camera;
+
     private HashMap<String, Model> dicoModel;
+
+    private TextureCache textureCache;
 
     public Scene(int largeur, int hauteur) {
         projection = new Projection(largeur,hauteur);
+        textureCache = new TextureCache();
+        camera = new Camera();
         dicoModel = new HashMap<>();
     }
 
@@ -45,4 +52,10 @@ public class Scene {
     public Projection getProjection() {return projection;}
 
     public HashMap<String, Model> getDicoModel() {return dicoModel;}
+
+    public Camera getCamera() {return camera;}
+
+    public TextureCache getTextureCache() {
+        return textureCache;
+    }
 }

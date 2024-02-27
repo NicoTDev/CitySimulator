@@ -1,9 +1,17 @@
 #version 330
 
-in  vec3 outColor;
+in  vec2 outTexCoord;
 out vec4 fragColor;
+
+
+struct Material {
+    vec4 diffuse;
+};
+
+uniform sampler2D txtSample;
+uniform Material material;
 
 void main()
 {
-    fragColor = vec4(outColor, 1.0);
+    fragColor = texture(txtSample,outTexCoord) + material.diffuse;
 }
