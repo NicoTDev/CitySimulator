@@ -30,7 +30,7 @@ public class Entite {
         taille = 1;
     }
 
-    public String getId() {
+    public String getIdEntite() {
         return id;
     }
     public String getIdModel() {

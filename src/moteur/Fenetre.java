@@ -2,6 +2,7 @@ package moteur;
 
 
 //importez les librairies
+import moteur.scene.Entite;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryUtil;
@@ -28,7 +29,9 @@ public class Fenetre {
 
 
     public Fenetre(String titre, optionFenetre opts, Callable<Void> fonctionResize) {
+
         this.fonctionResize = fonctionResize;
+
 
         //initialiser GLFW
         if (!glfwInit()) {
@@ -115,6 +118,10 @@ public class Fenetre {
         }
     }
 
+    public boolean isToucheAppuye(int code) {
+        return glfwGetKey(refFenetre,code) == GLFW_PRESS;
+    }
+
     public boolean isWindowShouldClose() {
         return glfwWindowShouldClose(refFenetre);
     }
@@ -141,7 +148,7 @@ public class Fenetre {
     }
     public static class optionFenetre {
         public boolean profileCompatible;
-        public int fps;
+        public int fps = 200;
 
         public int hauteur;
 

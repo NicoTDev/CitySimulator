@@ -3,7 +3,7 @@ package moteur.scene;
 import org.joml.*;
 
 /**
- *
+ * Classe responsable de gérer la caméra
  */
 public class Camera {
 
@@ -28,36 +28,57 @@ public class Camera {
         matriceVue = new Matrix4f();
     }
 
-    public void ajouterRotation(float x, float y) {
+    public void rotationner(float x, float y) {
         rotation.add(x,y);
-        recalculate();
+        mettreAJour();
     }
 
     public void avancer(float nombre) {
-        matriceVue.positiveZ(direction).mul(nombre);
+        matriceVue.positiveZ(direction).negate().mul(nombre);
         position.add(direction);
-        recalculate();
+        mettreAJour();
     }
 
     public void reculer(float nombre) {
         matriceVue.positiveZ(direction).negate().mul(nombre);
         position.sub(direction);
-        recalculate();
+        mettreAJour();
     }
 
     public void monter(float nombre) {
-        matriceVue.positiveY(direction).mul(nombre);
+        matriceVue.positiveY(haut).mul(nombre);
+        position.add(haut);
+        mettreAJour();
+    }
+
+    public void descendre(float nombre) {
+        matriceVue.positiveY(haut).mul(nombre);
+        position.sub(haut);
+        mettreAJour();
+    }
+
+    public void allerGauche(float nombre) {
+        matriceVue.positiveX(droite).mul(nombre);
+        position.sub(droite);
+        mettreAJour();
+    }
+
+    public void allerDroite(float nombre) {
+        matriceVue.positiveX(droite).mul(nombre);
+        position.add(droite);
+        mettreAJour();
     }
 
 
-    private void recalculate() {
+
+    private void mettreAJour() {
         matriceVue.identity()
                 .rotateX(rotation.x)
                 .rotateY(rotation.y)
                 .translate(-position.x,-position.y, -position.z);
-
-
-
     }
 
+    public Matrix4f getMatriceVue() {
+        return matriceVue;
+    }
 }

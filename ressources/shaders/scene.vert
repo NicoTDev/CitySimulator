@@ -7,9 +7,10 @@ out vec3 outColor;
 
 uniform mat4 matriceProjection;
 uniform mat4 matriceModel;
+uniform mat4 matriceVue;
 
 void main()
 {
-    gl_Position = matriceProjection * matriceModel * vec4(position, 1.0);
+    gl_Position = matriceProjection * matriceVue * matriceModel * vec4(position, 1.0);
     outColor = color;
 }

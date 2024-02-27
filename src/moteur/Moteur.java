@@ -68,9 +68,9 @@ public class Moteur {
 
             //gérer l'input de l'utilisateur
             if (targetFps <= 0 || deltaFps >= 1) {
-                //fenetre.getEntreSouris().input();
+                fenetre.getEntreSouris().entree();
                 //boolean inputConsumed = iGuiInstance != null ? iGuiInstance.handleGuiInput(scene, window) : false;
-                //logiqueJeu.input(fenetre, scene, now - tempsInitial, );
+                logiqueJeu.entree(fenetre, scene, present - tempsInitial);
             }
 
             //gérer la mise à jour de la logique du jeu

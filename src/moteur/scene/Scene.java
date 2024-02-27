@@ -17,10 +17,13 @@ public class Scene {
 
     private Projection projection;
 
+    private Camera camera;
+
     private HashMap<String, Model> dicoModel;
 
     public Scene(int largeur, int hauteur) {
         projection = new Projection(largeur,hauteur);
+        camera = new Camera();
         dicoModel = new HashMap<>();
     }
 
@@ -45,4 +48,6 @@ public class Scene {
     public Projection getProjection() {return projection;}
 
     public HashMap<String, Model> getDicoModel() {return dicoModel;}
+
+    public Camera getCamera() {return camera;}
 }

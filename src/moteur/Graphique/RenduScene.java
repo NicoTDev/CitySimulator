@@ -28,6 +28,7 @@ public class RenduScene {
 
         //creer l'uniforms
         uniformsMap = new UniformsMap(shaderChargeur.getIdProgramme());
+        uniformsMap.creerUniform("matriceVue");
         uniformsMap.creerUniform("matriceProjection");
         uniformsMap.creerUniform("matriceModel");
     }
@@ -40,6 +41,7 @@ public class RenduScene {
         shaderChargeur.utiliser();
 
         uniformsMap.setUniform("matriceProjection", scene.getProjection().getMatriceProjection());
+        uniformsMap.setUniform("matriceVue",scene.getCamera().getMatriceVue());
 
         Collection<Model> models = scene.getDicoModel().values();
         for (Model model : models) {
