@@ -62,17 +62,23 @@ public class Main implements ILogiqueJeu {
         final int TAILLECARTE = 30;
 
 
+        //tester le skin de voiture
+        Model modelCamion = ModelLoader.loadModel("camion-model-id", "ressources/models/camion/camion.obj", scene.getTextureCache());
+        scene.ajouterModel(modelCamion);
+
         for (int i = 0 ; i < TAILLECARTE ; i++) {
             for (int j = 0 ; j < TAILLECARTE ; j++) {
 
-                int hauteur = (int) (sin(i)+sin(j));
+                //int hauteur = (int) (sin(i)+sin(j));
+                int hauteur = 0;
                 Entite cube = new Entite("cube"+j+i, cubeModel.getId());
                 cube.setPosition(i - (TAILLECARTE/2), hauteur, j - (TAILLECARTE/2));
 
-                if ( (int) (Math.random()*100) >= 99) {
-                    Entite arbreEntite = new Entite("arbreEntite-"+i, arbreModel.getId());
-                    arbreEntite.setPosition(i - (TAILLECARTE / 2), hauteur + 0.5f, j - (TAILLECARTE / 2));
-                    scene.ajouterEntite(arbreEntite);
+                if ( (int) (Math.random()*100) >= 70) {
+                    Entite camion = new Entite("camion-id", modelCamion.getId());
+                    camion.setPosition(i - (TAILLECARTE / 2), hauteur + 0.5f, j - (TAILLECARTE / 2));
+                    scene.ajouterEntite(camion);
+                    camion.setRotation(0,1,0,(float)(Math.random()*2*Math.PI));
                 }
                 scene.ajouterEntite(cube);
             }
