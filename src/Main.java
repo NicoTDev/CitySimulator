@@ -1,4 +1,5 @@
 import jeu.Terrain;
+import jeu.Voiture;
 import moteur.*;
 import moteur.Graphique.*;
 import moteur.scene.Camera;
@@ -11,7 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Math.sin;
+import static java.lang.Math.*;
 
 /**
  * Classe Main à lancer au démarrage
@@ -19,15 +20,16 @@ import static java.lang.Math.sin;
 public class Main implements ILogiqueJeu {
 
 
-    private Entite entite;
-
-    private Terrain terrain;
 
     private static final float VITESSE = 0.050f;
 
     private static final float SENSIBILITE = 0.05f;
 
-    private float rotation = 0;
+    private List<Voiture> voitures;
+
+    public int rotation;
+
+
 
     public static void main(String args[]) {
         Main main = new Main();
@@ -50,6 +52,10 @@ public class Main implements ILogiqueJeu {
     @Override
     public void initialisation(Fenetre fenetre, Scene scene, Rendu rendu) {
 
+        //creer la liste des voitures du jeu
+        voitures = new ArrayList<>();
+
+        rotation = 0;
         Model cubeModel = ModelLoader.loadModel("cubeModel", "ressources/models/cube/cube.obj", scene.getTextureCache());
         scene.ajouterModel(cubeModel);
 
@@ -66,6 +72,7 @@ public class Main implements ILogiqueJeu {
         Model modelCamion = ModelLoader.loadModel("camion-model-id", "ressources/models/camion/camion.obj", scene.getTextureCache());
         scene.ajouterModel(modelCamion);
 
+
         for (int i = 0 ; i < TAILLECARTE ; i++) {
             for (int j = 0 ; j < TAILLECARTE ; j++) {
 
@@ -73,16 +80,23 @@ public class Main implements ILogiqueJeu {
                 int hauteur = 0;
                 Entite cube = new Entite("cube"+j+i, cubeModel.getId());
                 cube.setPosition(i - (TAILLECARTE/2), hauteur, j - (TAILLECARTE/2));
-
-                if ( (int) (Math.random()*100) >= 70) {
-                    Entite camion = new Entite("camion-id", modelCamion.getId());
-                    camion.setPosition(i - (TAILLECARTE / 2), hauteur + 0.5f, j - (TAILLECARTE / 2));
-                    scene.ajouterEntite(camion);
-                    camion.setRotation(0,1,0,(float)(Math.random()*2*Math.PI));
-                }
                 scene.ajouterEntite(cube);
             }
         }
+
+        //créer le véhicule
+        Voiture camion = new Voiture("voiture1",modelCamion.getId());
+        camion.setPosition(0,0.5f,0);
+        scene.ajouterEntite(camion);
+        camion.setVitesse(0.1f);
+        camion.setRotation(0,1,0,(float)Math.toRadians(45));
+        camion.setPosition(5,camion.getPosition().y,5);
+        //camion.setRotation(0,1,0,(float) toRadians(90));
+        voitures.add(camion);
+
+        scene.getCamera().rotationner(0,(float)Math.toRadians(180));
+
+        scene.getCamera().monter(5);
 
 
     }
@@ -99,9 +113,8 @@ public class Main implements ILogiqueJeu {
         Camera camera = scene.getCamera();
 
         //gérer les entrés de la caméra
-        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_W)) {
+        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_W))
             camera.avancer(mouvement);
-        }
         if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_S))
             camera.reculer(mouvement);
         if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_A))
@@ -133,8 +146,18 @@ public class Main implements ILogiqueJeu {
      */
     @Override
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
+        for (Voiture voiture : voitures) {
+            //voiture.mettreAJourVoiture();
+            //if (voiture.getRotation().y > 2*PI)
+            //    voiture.setRotation(0,1,0,0);
+            //if (rotation == 360)
+            //    rotation = 0;
+            //voiture.setRotation(0,1,0,(float) Math.toRadians(rotation++));
 
+            //System.out.println("Angle y : " + voiture.getRotation().y + " Angle : " + voiture.getRotation().angle());
 
+        }
     }
+
 }
 

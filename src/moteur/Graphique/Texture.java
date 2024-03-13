@@ -3,6 +3,7 @@ package moteur.Graphique;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
+import Outil.CouleurConsole;
 import moteur.scene.Scene;
 import org.lwjgl.glfw.GLFW.*;
 import org.lwjgl.system.MemoryStack;
@@ -39,7 +40,7 @@ public class Texture {
 
             ByteBuffer buf = stbi_load(cheminTexture, l, h, canaux,4);
             if (buf == null) {
-                System.err.println("[ATTENTION] Erreur lors du chargement de la texture : " + cheminTexture);
+                System.out.println( CouleurConsole.JAUNE.couleur + "[ATTENTION] Erreur lors du chargement de la texture : " + cheminTexture + CouleurConsole.RESET.couleur);
                 buf = stbi_load(TEXTURE_MANQUANTE,l,h,canaux,4);
             }
 

@@ -9,17 +9,17 @@ import org.joml.Vector3f;
  */
 public class Entite {
 
-    private final String id;
+    protected final String id;
 
-    private final String idModel;
+    protected final String idModel;
 
-    private Matrix4f matriceModel;
+    protected Matrix4f matriceModel;
 
-    private Vector3f position;
+    protected Vector3f position;
 
-    private Quaternionf rotation;
+    protected Quaternionf rotation;
 
-    private float taille;
+    protected float taille;
 
     public Entite(String id, String idModel) {
         this.id = id;
@@ -61,7 +61,7 @@ public class Entite {
     }
 
     public void setRotation(float x, float y, float z, float angle) {
-        this.rotation.fromAxisAngleRad(x,y,z,angle);
+        this.rotation.fromAxisAngleRad(x,y,z,-angle);
         mettreAJour();
     }
 
