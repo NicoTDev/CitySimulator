@@ -6,6 +6,7 @@ import moteur.scene.Camera;
 import moteur.scene.Entite;
 import moteur.scene.Scene;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import java.awt.event.MouseAdapter;
@@ -28,6 +29,8 @@ public class Main implements ILogiqueJeu {
     private List<Voiture> voitures;
 
     public int rotation;
+
+    Entite cube;
 
 
 
@@ -85,19 +88,22 @@ public class Main implements ILogiqueJeu {
         }
 
         //créer le véhicule
-        Voiture camion = new Voiture("voiture1",modelCamion.getId());
-        camion.setPosition(0,0.5f,0);
-        scene.ajouterEntite(camion);
-        camion.setVitesse(0.1f);
-        camion.setRotation(0,1,0,(float)Math.toRadians(45));
-        camion.setPosition(5,camion.getPosition().y,5);
-        //camion.setRotation(0,1,0,(float) toRadians(90));
-        voitures.add(camion);
-
-        scene.getCamera().rotationner(0,(float)Math.toRadians(180));
+        for (int i = 0 ; i < 1; i++) {
+            Voiture camion = new Voiture("voiture"+i, modelCamion.getId());
+            camion.setPosition(i*2, 0.5f, i*2);
+            camion.setVitesse(0.1f);
+            voitures.add(camion);
+            scene.ajouterEntite(camion);
+        }
 
         scene.getCamera().monter(5);
+        scene.getCamera().reculer(20);
 
+        //creer un point pour tester les positions de la voiture
+        cube = new Entite("tester",cubeModel.getId());
+        scene.ajouterEntite(cube);
+        cube.setTaille(0.1f);
+        cube.setPosition(-10,1,12);
 
     }
 
@@ -153,7 +159,14 @@ public class Main implements ILogiqueJeu {
             //if (rotation == 360)
             //    rotation = 0;
             //voiture.setRotation(0,1,0,(float) Math.toRadians(rotation++));
+            voiture.mettreAJourVoiture();
+            if (voiture.getDistanceDestinationPoint() <= 1) {
+                //créer un autre point de test
+                Vector3f ob = new Vector3f((float) (Math.random()*20-10),1,(float) (Math.random()*20-10));
+                voiture.setPointAAller(ob.x,ob.z);
+                cube.setPosition(ob.x,0.5f,ob.z);
 
+            }
             //System.out.println("Angle y : " + voiture.getRotation().y + " Angle : " + voiture.getRotation().angle());
 
         }

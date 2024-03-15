@@ -148,7 +148,7 @@ public class Fenetre {
     }
     public static class optionFenetre {
         public boolean profileCompatible;
-        public int fps = 120;
+        public int fps = 200;
 
         public int hauteur;
 
