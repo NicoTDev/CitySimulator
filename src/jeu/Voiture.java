@@ -1,9 +1,10 @@
 package jeu;
 
 import Outil.CouleurConsole;
+import Outil.MathLocal;
 import moteur.scene.Entite;
 import org.joml.Vector2f;
-import org.joml.Vector3f;
+
 import static java.lang.Math.*;
 
 
@@ -31,10 +32,10 @@ public class Voiture extends Entite {
         vitesse = 0;
         acceleration = 0;
         masse = 3500;
-        pointAAller = new Vector2f(-10,12);
+        indexDeRoute = 0;
+        pointAAller = new Vector2f(0,3);
         positionLocale = new Vector2f(getPosition().x, getPosition().z);
         angle = getRotation().angle();
-        indexDeRoute = 0;
     }
 
     public float getAngle() {
@@ -48,17 +49,10 @@ public class Voiture extends Entite {
     }
 
     public float actualiserAngle() {
-        float x = pointAAller.x - positionLocale.x;
-        float y = pointAAller.y - positionLocale.y;
-        float angle = (float) abs(atan(y/x));
-        if (x < 0 && y < 0)
-            angle += PI;
-        else if (x < 0 && y > 0)
-            angle = (float)(PI-angle);
-        else if (x > 0 && y < 0)
-            angle = (float)(2*PI-angle);
         System.out.println(CouleurConsole.BLEU.couleur + "a : " + angle + " a : " + max(min(angle-getAngle(),(float) Math.toRadians(10)),(float) Math.toRadians(-10)));
-        return max(min(angle-getAngle(),(float) Math.toRadians(2)),(float) Math.toRadians(-2));
+        float teta3 = MathLocal.trouverAngleDeuxPoints(positionLocale,pointAAller) - getAngle();
+        //return max(min(teta3,(float) Math.toRadians(5)),(float)Math.toRadians(-5));
+        return teta3;
     }
 
     public Vector2f getProchainPoint() {
@@ -104,10 +98,13 @@ public class Voiture extends Entite {
         float angleAAjouter = actualiserAngle();
         setAngle(getAngle()+angleAAjouter);
         //mettre à jour la position
-        if (getDistanceDestinationPoint() > 1) {
+        if (getDistanceDestinationPoint() > 0.1f) {
             Vector2f positionsAdd = getProchainPoint();
             Vector2f getVecteurDerapage;
             setPositionLocale(getPositionLocale().x + positionsAdd.x, getPositionLocale().y + positionsAdd.y);
+        }
+        else {
+            pointAAller = (Vector2f) (routeActuelle.getPointsBezier().get(indexDeRoute++));
         }
     }
 
@@ -131,5 +128,8 @@ public class Voiture extends Entite {
     public void getVecteurDerapage() {}
 
 
+    public void setRouteActuelle(Route routeActuelle) {
+        this.routeActuelle = routeActuelle;
+    }
 
 }

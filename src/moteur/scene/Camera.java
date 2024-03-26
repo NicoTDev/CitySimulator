@@ -19,6 +19,8 @@ public class Camera {
 
     private Matrix4f matriceVue;
 
+    private Matrix4f matriceVueInverse;
+
     public Camera() {
         direction = new Vector3f();
         position = new Vector3f();
@@ -26,6 +28,7 @@ public class Camera {
         rotation = new Vector2f();
         haut = new Vector3f();
         matriceVue = new Matrix4f();
+        matriceVueInverse = new Matrix4f();
     }
 
     public void rotationner(float x, float y) {
@@ -76,9 +79,18 @@ public class Camera {
                 .rotateX(rotation.x)
                 .rotateY(rotation.y)
                 .translate(-position.x,-position.y, -position.z);
+        matriceVueInverse.set(matriceVue).invert();
     }
 
     public Matrix4f getMatriceVue() {
         return matriceVue;
+    }
+
+    public Matrix4f getMatriceVueInverse() {
+        return matriceVueInverse;
+    }
+
+    public Vector3f getPosition() {
+        return position;
     }
 }

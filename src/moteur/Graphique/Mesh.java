@@ -1,5 +1,6 @@
 package moteur.Graphique;
 
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryStack;
 
@@ -22,15 +23,24 @@ public class Mesh {
 
     private List<Integer> vbosId;
 
+    private Vector3f aabbMin;
+
+    private Vector3f aabbMax;
+
     /**
      *
      * @param positions liste des positions des verticles
      * @param textCoords liste des positions des textures
      * @param indices liste des indices pour relier les verticles entre eux
      */
-    public Mesh(float[] positions, float[] textCoords, int[] indices) {
+    public Mesh(float[] positions, float[] textCoords, int[] indices, Vector3f aabbMin, Vector3f aabbMax) {
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
+
+            //mettre les collisions
+            this.aabbMax = aabbMax;
+            this.aabbMin = aabbMin;
+
 
             numVerticles = indices.length;
 
@@ -89,5 +99,13 @@ public class Mesh {
 
     public final int getIdVao() {
         return idVao;
+    }
+
+    public Vector3f getAabbMax() {
+        return aabbMax;
+    }
+
+    public Vector3f getAabbMin() {
+        return aabbMin;
     }
 }

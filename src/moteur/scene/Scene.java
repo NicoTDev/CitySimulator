@@ -15,6 +15,7 @@ import java.util.Map;
 public class Scene {
 
 
+    private Entite entiteSelectionne;
 
     private Projection projection;
 
@@ -29,6 +30,7 @@ public class Scene {
         textureCache = new TextureCache();
         camera = new Camera();
         dicoModel = new HashMap<>();
+        entiteSelectionne = null;
     }
 
     public void detruireProgramme() {
@@ -36,7 +38,6 @@ public class Scene {
     }
     public void resize(int largeur, int hauteur) {
         projection.mettreAJour(largeur,hauteur);
-
     }
     public void ajouterModel(Model model) {
         dicoModel.put(model.getId(),model);
@@ -57,5 +58,13 @@ public class Scene {
 
     public TextureCache getTextureCache() {
         return textureCache;
+    }
+
+    public Entite getEntiteSelectionne() {
+        return entiteSelectionne;
+    }
+
+    public void setEntiteSelectionne(Entite entite) {
+        this.entiteSelectionne = entite;
     }
 }

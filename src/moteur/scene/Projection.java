@@ -15,14 +15,22 @@ public class Projection {
 
     private Matrix4f matriceProjection;
 
+    private Matrix4f matriceProjectionInverse;
+
     public Projection(int largeur, int hauteur) {
         matriceProjection = new Matrix4f();
+        matriceProjectionInverse = new Matrix4f();
         mettreAJour(largeur,hauteur);
     }
     public void mettreAJour(int largeur, int hauteur) {
         matriceProjection.setPerspective(FOV,(float) largeur/hauteur,Z_PROCHE,Z_LOIN);
+        matriceProjectionInverse.set(matriceProjection).invert();
     }
 
     //getters
     public Matrix4f getMatriceProjection() {return matriceProjection;}
+
+    public Matrix4f getMatriceProjectionInverse() {
+        return matriceProjectionInverse;
+    }
 }

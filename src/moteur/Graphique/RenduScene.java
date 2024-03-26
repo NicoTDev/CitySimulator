@@ -21,8 +21,8 @@ public class RenduScene {
 
         //inclure tous les shaders
         List<ShaderChargeur.donneeShader> shaders = new ArrayList<>();
-        shaders.add(new ShaderChargeur.donneeShader("ressources/shaders/scene.vert",GL_VERTEX_SHADER));
-        shaders.add(new ShaderChargeur.donneeShader("ressources/shaders/scene.frag",GL_FRAGMENT_SHADER));
+        shaders.add(new ShaderChargeur.donneeShader("ressources/shaders/scene/scene.vert",GL_VERTEX_SHADER));
+        shaders.add(new ShaderChargeur.donneeShader("ressources/shaders/scene/scene.frag",GL_FRAGMENT_SHADER));
         //créer le programme pour charger les shaders
         shaderChargeur = new ShaderChargeur(shaders);
 

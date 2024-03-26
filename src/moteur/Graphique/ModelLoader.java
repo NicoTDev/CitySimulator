@@ -1,5 +1,6 @@
 package moteur.Graphique;
 
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.*;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import static org.lwjgl.assimp.Assimp.*;
 
@@ -34,7 +36,10 @@ public class ModelLoader {
     }
 
     public static Model loadModel(String id, String chemin, TextureCache textureCache, int flags) {
+
+
         File file = new File(chemin);
+
         if (!file.exists())
             throw new IllegalArgumentException("Ce fichier n'existe pas [" + chemin + "]");
 
@@ -85,12 +90,17 @@ public class ModelLoader {
         float[] textCoords = loadTextCoord(mesh);
         int[] indices   = loadIndices(mesh);
 
+        //collisionBox
+        AIAABB aabb = mesh.mAABB();
+        Vector3f aabbMin = new Vector3f(aabb.mMin().x(), aabb.mMin().y(), aabb.mMin().z());
+        Vector3f aabbMax = new Vector3f(aabb.mMax().x(), aabb.mMax().y(), aabb.mMax().z());
+
         if (textCoords.length == 0) {
             int numElements = (verticles.length / 3) * 2;
             textCoords = new float[numElements];
         }
 
-        return new Mesh(verticles, textCoords, indices);
+        return new Mesh(verticles, textCoords, indices,aabbMin,aabbMax);
     }
 
     private static int[] loadIndices(AIMesh mesh) {
