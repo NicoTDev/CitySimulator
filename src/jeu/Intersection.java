@@ -55,4 +55,5 @@ public class Intersection {
     public Vector2f getPosition() {
         return position;
     }
+
 }

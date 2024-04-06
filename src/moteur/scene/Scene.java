@@ -1,11 +1,15 @@
 package moteur.scene;
 
+import jeu.Intersection;
+import jeu.Route;
+import jeu.Voiture;
 import moteur.Graphique.Mesh;
 import moteur.Graphique.Model;
 import moteur.Graphique.TextureCache;
 import moteur.Moteur;
 import org.lwjgl.system.Pointer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +19,7 @@ import java.util.Map;
 public class Scene {
 
 
+    private Skybox skybox;
     private Entite entiteSelectionne;
 
     private Projection projection;
@@ -24,6 +29,13 @@ public class Scene {
     private HashMap<String, Model> dicoModel;
 
     private TextureCache textureCache;
+
+    //ici on regarde tous les types d'entite
+    private ArrayList<Voiture> voitures;
+
+    private HashMap<String, Route> routes;
+
+    private ArrayList<Intersection> intersections;
 
     public Scene(int largeur, int hauteur) {
         projection = new Projection(largeur,hauteur);
@@ -43,13 +55,15 @@ public class Scene {
         dicoModel.put(model.getId(),model);
     }
 
-    public void ajouterEntite(Entite entite) {
+    public void ajouterEntite(Entite entite, Class<?> classeDeEntite) {
         String idModel = entite.getIdModel();
         Model model = dicoModel.get(idModel);
         if (model == null)
             throw new IllegalArgumentException(idModel + " introuvable");
         model.getEntites().add(entite);
+        System.out.println("induit : " + classeDeEntite + " | Primitif : " + entite.getClass());
     }
+
     public Projection getProjection() {return projection;}
 
     public HashMap<String, Model> getDicoModel() {return dicoModel;}
@@ -66,5 +80,16 @@ public class Scene {
 
     public void setEntiteSelectionne(Entite entite) {
         this.entiteSelectionne = entite;
+    }
+
+
+    public Skybox getSkyBox() {
+
+        return skybox;
+
+    }
+
+    public void setSkybox(Skybox skybox) {
+        this.skybox = skybox;
     }
 }

@@ -1,5 +1,6 @@
 package moteur.Graphique;
 
+import Outil.CouleurConsole;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.PointerBuffer;
@@ -29,15 +30,13 @@ public class ModelLoader {
                 aiProcess_JoinIdenticalVertices | //joindre les verticles similaires pour réduire le nombre
                 aiProcess_Triangulate | //dire que l'on veut tout split en triangles
                 aiProcess_FixInfacingNormals | //fix quelque chose dans la normal
-                aiProcess_CalcTangentSpace | //utile pour la lumière
-                aiProcess_LimitBoneWeights | //utile pour les animations
                 aiProcess_PreTransformVertices);
 
     }
 
     public static Model loadModel(String id, String chemin, TextureCache textureCache, int flags) {
 
-
+        //trouvez le dossier
         File file = new File(chemin);
 
         if (!file.exists())
@@ -49,11 +48,11 @@ public class ModelLoader {
         if (aiScene == null)
             System.err.println("[ERREUR] Incapable de loader le model : " + chemin);
 
-
         //créer la liste de material
         int numMaterials = aiScene.mNumMaterials();
         List<Material> materials = new ArrayList<>();
         for (int i = 0 ; i < numMaterials ; i ++) {
+
             AIMaterial aiMaterial = AIMaterial.create(aiScene.mMaterials().get(i));
             materials.add(loadMaterial(aiMaterial,dossierModel,textureCache));
 
@@ -80,27 +79,27 @@ public class ModelLoader {
                 materials.add(materialDefaut);
         }
 
-
-
         return new Model(id,materials);
     }
 
     private static Mesh loadMesh(AIMesh mesh) {
         float[] verticles = loadVerticles(mesh);
         float[] textCoords = loadTextCoord(mesh);
-        int[] indices   = loadIndices(mesh);
+        int[] indices = loadIndices(mesh);
 
         //collisionBox
         AIAABB aabb = mesh.mAABB();
         Vector3f aabbMin = new Vector3f(aabb.mMin().x(), aabb.mMin().y(), aabb.mMin().z());
         Vector3f aabbMax = new Vector3f(aabb.mMax().x(), aabb.mMax().y(), aabb.mMax().z());
+        //System.out.println(CouleurConsole.JAUNE.couleur + aabbMin.x);
+        //System.out.println(CouleurConsole.JAUNE.couleur + aabbMax.x);
 
         if (textCoords.length == 0) {
             int numElements = (verticles.length / 3) * 2;
             textCoords = new float[numElements];
         }
 
-        return new Mesh(verticles, textCoords, indices,aabbMin,aabbMax);
+        return new Mesh(verticles, textCoords, indices, aabbMin, aabbMax);
     }
 
     private static int[] loadIndices(AIMesh mesh) {
@@ -123,9 +122,10 @@ public class ModelLoader {
         int pos = 0;
         while (buffer.remaining() > 0) {
             AIVector3D textCoord = buffer.get();
-            data[pos++] = textCoord.x();
-            data[pos++] = textCoord.y();
-            data[pos++] = textCoord.z();
+            data[pos] = textCoord.x();
+            data[pos+1] = textCoord.y();
+            data[pos+2] = textCoord.z();
+            pos+=3;
         }
         return data;
     }
@@ -139,8 +139,9 @@ public class ModelLoader {
         int pos = 0;
         while (buffer.remaining() > 0) {
             AIVector3D textCoord = buffer.get();
-            data[pos++] = textCoord.x();
-            data[pos++] = 1 - textCoord.y();
+            data[pos] = textCoord.x();
+            data[pos+1] = 1 - textCoord.y();
+            pos+=2;
         }
         return data;
     }

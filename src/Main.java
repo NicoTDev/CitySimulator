@@ -1,22 +1,22 @@
-import jeu.Route;
-import jeu.Terrain;
-import jeu.Voiture;
+import Outil.CouleurConsole;
+import jeu.*;
+import moteur.Graphique.Terrain;
 import moteur.*;
 import moteur.Graphique.*;
 import moteur.scene.Camera;
 import moteur.scene.Entite;
 import moteur.scene.Scene;
 import moteur.scene.Skybox;
-import org.joml.Vector2f;
-import org.joml.Vector3f;
+import org.joml.*;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL;
-import java.awt.event.MouseAdapter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import org.lwjgl.stb.STBIWriteCallbackI;
 
-import static java.lang.Math.*;
+import java.lang.System.*;
+
+import java.lang.Math;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Classe Main à lancer au démarrage
@@ -25,7 +25,7 @@ public class Main implements ILogiqueJeu {
 
 
 
-    private static final float VITESSE = 0.050f;
+    private static final float VITESSE = 0.010f;
 
     private static final float SENSIBILITE = 0.05f;
 
@@ -33,9 +33,22 @@ public class Main implements ILogiqueJeu {
 
     public int rotation;
 
-    Entite skybox;
+    public Mode modeUtilisateur;
 
-    Entite cube;
+    Route routeEnConstruction;
+
+    boolean isRouteEnCours;
+
+
+
+    Model arbreModel;
+
+    Terrain terrain;
+
+    long tempsActuel = System.currentTimeMillis();
+
+
+
 
 
 
@@ -60,73 +73,43 @@ public class Main implements ILogiqueJeu {
     @Override
     public void initialisation(Fenetre fenetre, Scene scene, Rendu rendu) {
 
+        //mettre les modes par défaut
+        modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
+        isRouteEnCours = false;
+
+
+        //creer un terrain
+        terrain = new Terrain();
+        terrain.genererTerrain(70,70);
+
+
+        //creer un terrain
+        Model terrainModel = ModelLoader.loadModel("model-terrain","ressources/models/terrain/Terrain.obj",scene.getTextureCache());
+        scene.ajouterModel(terrainModel);
+        Entite terrainEntite = new Entite("entite-terrain",terrainModel.getId());
+        scene.ajouterEntite(terrainEntite,terrainEntite.getClass());
+
         //creer la liste des voitures du jeu
         voitures = new ArrayList<>();
-
-        rotation = 0;
-        Model cubeModel = ModelLoader.loadModel("cube-model", "ressources/models/cube/cube.obj", scene.getTextureCache());
-        scene.ajouterModel(cubeModel);
-
-
-        //créer le model des arbres
-        Model arbreModel = ModelLoader.loadModel("arbre-model","ressources/models/arbre/Arbre.obj", scene.getTextureCache());
-        scene.ajouterModel(arbreModel);
-
 
         //pour le moment, la carte est créé à partir de cube, cela va changer plus tard
         final int TAILLECARTE = 30;
 
 
         //tester le skin de voiture
-        Model modelCamion = ModelLoader.loadModel("camion-model-id", "ressources/models/camion/camion.obj", scene.getTextureCache());
-        scene.ajouterModel(modelCamion);
+        Model modelVoiture = ModelLoader.loadModel("voiture-model", "ressources/models/camion/camion.obj", scene.getTextureCache());
+        scene.ajouterModel(modelVoiture);
+        //créer la voiture
+        Voiture voiture = new Voiture("voiture-entite",modelVoiture.getId());
+        scene.ajouterEntite(voiture,voiture.getClass());
 
-        //model de la rue
-        Model rue = ModelLoader.loadModel("rue-model-id", "ressources/models/routeProto/routeProto.obj",scene.getTextureCache());
-        scene.ajouterModel(rue);
-
-        Model skyboxModel = ModelLoader.loadModel("skybox-model-id","ressources/models/skybox/skybox.obj",scene.getTextureCache());
-        scene.ajouterModel(skyboxModel);
-
-        skybox = new Entite("skybox-entite-id",skyboxModel.getId());
-        scene.ajouterEntite(skybox);
-        skybox.setTaille(500);
-
-        for (int i = 0 ; i < TAILLECARTE ; i++) {
-            for (int j = 0 ; j < TAILLECARTE ; j++) {
-
-                //int hauteur = (int) (sin(i)+sin(j));
-                int hauteur = 0;
-                Entite cube = new Entite("cube"+j+i, cubeModel.getId());
-                cube.setPosition(i - (TAILLECARTE/2), hauteur, j - (TAILLECARTE/2));
-                scene.ajouterEntite(cube);
-            }
-        }
-
-        //créer le véhicule
-        for (int i = 0 ; i < 1; i++) {
-            Voiture camion = new Voiture("voiture"+i, modelCamion.getId());
-            camion.setPosition(1000, 0.5f, i*2);
-            camion.setVitesse(0.1f);
-            voitures.add(camion);
-            scene.ajouterEntite(camion);
-        }
+        //Skybox
+        //Skybox skybox = new Skybox("ressources/models/skybox/skybox.obj", scene.getTextureCache());
+        //skybox.getEntiteSkybox().setTaille(50);
+        //scene.setSkybox(skybox);
 
         scene.getCamera().monter(5);
         scene.getCamera().reculer(20);
-
-        //creer un point pour tester les positions de la voiture
-        cube = new Entite("tester",rue.getId());
-        scene.ajouterEntite(cube);
-        cube.setTaille(1);
-        cube.setPosition(10,1,-12);
-
-        //créer une route
-        Route route = new Route(new Vector2f(4,0));
-
-        route.genererRoute(scene);
-
-        voitures.get(0).setRouteActuelle(route);
     }
 
     /**
@@ -161,13 +144,30 @@ public class Main implements ILogiqueJeu {
             camera.rotationner((float) Math.toRadians(-vectDisp.x*SENSIBILITE),
                     (float) Math.toRadians(-vectDisp.y*SENSIBILITE));
         }
-        //regarder si on selectionne
-        if (entreSouris.isBoutonGauchePresse()) {
-            selectionnerEntite();
+
+        //ici, avant de lui permettre d'intéragir, on regarde s'il est spectateur;
+        if (!modeUtilisateur.equals(Mode.SPECTATEUR)) {
+        //regarder si on selectionne quelque chose
+            if (entreSouris.isBoutonGauchePresse() && System.currentTimeMillis() > tempsActuel+100) {
+                tempsActuel = System.currentTimeMillis();
+
+                switch (modeUtilisateur) {
+
+                    case CONSTRUCTEURDEROUTE -> {
+                        placerPointRoute(fenetre,scene,entreSouris.getPositionActuelle());
+                    }
+
+                    case PLACEURINTERSECTION -> {}
+                    case CUSTOMIZERINTERSECTION -> {}
+                }
+            }
+
 
         }
 
     }
+
+
 
     /**
      * Méthode lancée chaque rafraichissement de l'écran
@@ -179,10 +179,8 @@ public class Main implements ILogiqueJeu {
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
 
 
-        skybox.setPosition(scene.getCamera().getPosition().x, scene.getCamera().getPosition().y-(skybox.getTaille()/2),scene.getCamera().getPosition().z);
-
         for (Voiture voiture : voitures) {
-            //voiture.mettreAJourVoiture();
+            voiture.mettreAJourVoiture();
             //if (voiture.getRotation().y > 2*PI)
             //    voiture.setRotation(0,1,0,0);
             //if (rotation == 360)
@@ -197,11 +195,129 @@ public class Main implements ILogiqueJeu {
         }
     }
 
-    public void selectionnerEntite() {
+    public void selectionnerEntite(Fenetre fenetre, Scene scene, Vector2f pos) {
 
-        System.out.println("Selectionne");
+        int largeurFenetre = fenetre.getLargeur();
+        int hauteurFenetre = fenetre.getHauteur();
+
+        //on normalise les coordonnées
+        float x = (2 * pos.x) / largeurFenetre - 1.0f;
+        float y = 1.0f - (2 * pos.y) / hauteurFenetre;
+        float z = -1.0f;
+
+        //faire l'inverse de la technique que l'on a fait pour generer les objets en multipliant cette fois les matrices inverse
+        //de la projection et de la matriceVue pour lancer un "ray"
+        Matrix4f invProjMatrix = scene.getProjection().getMatriceProjectionInverse();
+        Vector4f mouseDir = new Vector4f(x, y, z, 1.0f);
+        mouseDir.mul(invProjMatrix);
+        mouseDir.z = -1.0f;
+        mouseDir.w = 0.0f;
+
+        Matrix4f invViewMatrix = scene.getCamera().getMatriceVueInverse();
+        mouseDir.mul(invViewMatrix);
+
+        Vector4f min = new Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
+        Vector4f max = new Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
+        Vector2f nearFar = new Vector2f();
+
+        Entite entiteSelectionnee = null;
+        float plusPetiteDistance = Float.POSITIVE_INFINITY;
+        Vector3f centre = scene.getCamera().getPosition();
+
+        Collection<Model> models = scene.getDicoModel().values();
+        Matrix4f modelMatrix = new Matrix4f();
+        for (Model model : models) {
+            List<Entite> entities = model.getEntites();
+
+            //pour chaque Entite sur la map, on regarde si le ray traverse l'objet
+            for (Entite entite : entities) {
+
+                modelMatrix.translate(entite.getPosition()).scale(entite.getTaille());
+                for (Material material : model.getMateriaux()) {
+                    //pour chaque mesh de l'entite
+                    for (Mesh mesh : material.getMeshList()) {
+
+                        //on get les aabb réel de l'objet
+                        Vector3f aabbMin = new Vector3f(-100,0,-100);
+                        min.set(aabbMin.x, aabbMin.y, aabbMin.z, 1.0f);
+                        min.mul(modelMatrix);
+                        Vector3f aabbMax = new Vector3f(100,1,100);
+                        max.set(aabbMax.x, aabbMax.y, aabbMax.z, 1.0f);
+                        max.mul(modelMatrix);
+
+                        //si le rayon traverse l'objet, on selectionne l'entite
+                        if (Intersectionf.intersectRayAab(centre.x, centre.y, centre.z, mouseDir.x, mouseDir.y, mouseDir.z,
+                                min.x, min.y, min.z, max.x, max.y, max.z, nearFar) && nearFar.x < plusPetiteDistance) {
+                            plusPetiteDistance = nearFar.x;
+                            entiteSelectionnee = entite;
+                        }
+                    }
+                }
+                modelMatrix.identity();
+            }
+        }
+        //System.out.println( entiteSelectionnee == null ? entiteSelectionnee : CouleurConsole.BLEU.couleur + entiteSelectionnee);
+    }
+
+
+    public Vector4f getDirectionSouris(Fenetre fenetre, Scene scene, Vector2f positionSouris) {
+        int largeurFenetre = fenetre.getLargeur();
+        int hauteurFenetre = fenetre.getHauteur();
+
+        //on normalise les coordonnées
+        float x = (2 * positionSouris.x) / largeurFenetre - 1.0f;
+        float y = 1.0f - (2 * positionSouris.y) / hauteurFenetre;
+        float z = -1.0f;
+
+        //faire l'inverse de la technique que l'on a fait pour generer les objets en multipliant cette fois les matrices inverse
+        //de la projection et de la matriceVue pour lancer un "ray"
+        Matrix4f invProjMatrix = scene.getProjection().getMatriceProjectionInverse();
+
+        //créer la direction du rayon
+        Vector4f directionSouris = new Vector4f(x, y, z, 1.0f);
+        directionSouris.mul(invProjMatrix);
+        directionSouris.z = -1.0f;
+        directionSouris.w = 0.0f;
+
+        Matrix4f invViewMatrix = scene.getCamera().getMatriceVueInverse();
+        directionSouris.mul(invViewMatrix);
+
+        return directionSouris;
+    }
+    public void placerPointRoute(Fenetre fenetre, Scene scene, Vector2f pos) {
+
+        Vector4f directionSouris = getDirectionSouris(fenetre,scene,pos);
+
+        //ici on initialise les valeurs de minimum et de maximum du terrain
+        Vector4f min = new Vector4f(-Math.round((terrain.getLargeur()-1) / 2.0f ), 0.0f, -Math.round( (terrain.getHauteur()-1) / 2.0f) ,1.0f);
+        Vector4f max = new Vector4f(Math.round((terrain.getLargeur()-1) / 2.0f ), 0.1f, Math.round( (terrain.getHauteur()-1) / 2.0f) ,1.0f);
+        Vector2f t = new Vector2f();
+
+        float plusPetiteDistance = Float.POSITIVE_INFINITY;
+        Vector3f centre = scene.getCamera().getPosition();
+
+        //si le rayon traverse l'objet, on selectionne l'entite
+        if (Intersectionf.intersectRayAab(centre.x, centre.y, centre.z, directionSouris.x, directionSouris.y, directionSouris.z,
+                min.x, min.y, min.z, max.x, max.y, max.z, t) && t.x < plusPetiteDistance) {
+            plusPetiteDistance = t.x;
+
+            Vector3f point = new Vector3f(directionSouris.x, directionSouris.y, directionSouris.z).mul(plusPetiteDistance).add(centre);
+
+            //soit créer une route, soit ajouter un segment si cette route n'existe pas
+            if (isRouteEnCours) {
+                routeEnConstruction.ajouterSegment(new Vector2f(point.x,point.z),scene);
+            }
+            else {
+                routeEnConstruction = new Route(new Vector2f(point.x, point.z), scene);
+                isRouteEnCours = true;
+            }
+
+
+            //System.out.println( plusPetiteDistance == Float.POSITIVE_INFINITY ? plusPetiteDistance : CouleurConsole.BLEU.couleur + plusPetiteDistance);
+        }
 
     }
 
 }
+
 

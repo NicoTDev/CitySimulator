@@ -77,4 +77,8 @@ public class EntreSouris {
     public Vector2f getVectDisp() {
         return vectDisp;
     }
+
+    public Vector2f getPositionActuelle() {
+        return positionActuelle;
+    }
 }

@@ -13,12 +13,15 @@ public class Rendu {
 
 
     RenduScene renduScene;
+
+    RenduSkybox renduSkybox;
     public Rendu(Fenetre fenetre) {
         GL.createCapabilities();
         glEnable(GL_DEPTH_TEST);
         //glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         renduScene = new RenduScene();
+        //renduSkybox = new RenduSkybox();
 
     }
     public void detruireProgramme() {
@@ -30,6 +33,7 @@ public class Rendu {
         glViewport(0,0,fenetre.getLargeur(),fenetre.getHauteur());
 
         renduScene.rendre(scene);
+        //renduSkybox.rendre(scene);
 
     }
 

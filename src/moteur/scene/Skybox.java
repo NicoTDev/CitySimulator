@@ -11,7 +11,7 @@ public class Skybox {
     public Skybox(String cheminModel, TextureCache textureCache) {
 
         modelSkybox = ModelLoader.loadModel("model-skybox",cheminModel, textureCache);
-        entiteSkybox = new Entite("entite-skybox",modelSkybox.getId());
+        entiteSkybox = new Entite("entite-skybox", modelSkybox.getId());
 
     }
 

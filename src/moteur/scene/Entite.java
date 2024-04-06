@@ -73,4 +73,8 @@ public class Entite {
     public void mettreAJour() {
         matriceModel.translationRotateScale(position,rotation,taille);
     }
+
+    public String toString() {
+        return getIdEntite();
+    }
 }
