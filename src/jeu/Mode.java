@@ -9,5 +9,4 @@ public enum Mode {
 
     CUSTOMIZERINTERSECTION,
 
-
 }

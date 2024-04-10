@@ -6,6 +6,7 @@ import moteur.Fenetre;
 import moteur.Graphique.*;
 import moteur.scene.Entite;
 import moteur.scene.Scene;
+import org.joml.Math;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -17,31 +18,43 @@ import java.util.List;
  *  Cet algorithme utilise les courbes de Bézier pour tracer les routes
  *  informations sur le sujet : https://fr.wikipedia.org/wiki/Courbe_de_B%C3%A9zier
  */
-public class Route{
+public class Route {
 
     final float COEFFICIENT_FROTTEMENT = 10;
 
-    final float TAILLEROUTE = 2;
+    final float TAILLEROUTE = 1;
 
 
     //points d'ancrage et de controle
-    ArrayList<Vector2f> pointsBezier;
+    private ArrayList<Vector2f> pointsBezier;
 
     //points sur la droite (à enlever dans l'avenir)
-    ArrayList<Vector2f> pointsRoute;
+    private ArrayList<Vector2f> pointsRoute;
 
-    String nomRue;
+    private String nomRue;
 
-    Model routeModel;
+    private Model routeModel;
 
-    Mesh routeMesh;
+    private Mesh routeMesh;
 
+    private Material material;
+
+    private ArrayList<Material> materials;
+
+    private Entite routeEntite;
+
+    private Intersection intersectionDepart;
+
+    private Intersection intersectionFin;
 
     public Route(Vector2f pointDepart, Scene scene) {
         //créer les points initiales de la route
-        nomRue = String.valueOf( (int) (Math.random()*1000000));
+        nomRue = genererNomRue();
         pointsRoute = new ArrayList<>();
         pointsBezier = new ArrayList<>();
+
+        intersectionDepart = null;
+        intersectionFin = null;
 
         //ajouter les points au start (l'ancrage et le point de base avec)
         pointsBezier.add(new Vector2f(pointDepart));
@@ -51,13 +64,19 @@ public class Route{
         scene.getTextureCache().creerTexture("ressources/models/route/route.png");
 
         //créer le material de la texture
-        Material material = new Material();
+        material = new Material();
         material.setCheminTexture("ressources/models/route/route.png");
         material.setCouleurDiffuse(new Vector4f(0,0,0,1));
-        material.getMeshList().add(routeMesh);
 
-        ArrayList<Material> materials = new ArrayList<>();
+        materials = new ArrayList<>();
         materials.add(material);
+
+        routeModel = new Model("model-"+nomRue,materials);
+        scene.ajouterModel(routeModel);
+
+        routeEntite = new Entite("entite-"+nomRue,routeModel.getId());
+        scene.ajouterRoute(this);
+
 
     }
 
@@ -129,27 +148,28 @@ public class Route{
             setPointControlAuto(i);
         }
 
-        ArrayList<Vector2f> liste = evaluerPointCourbe(0.5f,0.5f);
+        ArrayList<Vector2f> liste = evaluerPointCourbe(0.5f,1);
 
         for (Vector2f v : liste) {
             pointsRoute.add(v);
         }
 
+
+
         routeMesh = genererRouteMesh(pointsRoute, scene);
 
-        //créer le material de la texture
-        Material material = new Material();
-        material.setCheminTexture("ressources/models/route/route.png");
-        material.setCouleurDiffuse(new Vector4f(0,0,0,1));
-        material.getMeshList().add(routeMesh);
+        if (material.getMeshList().isEmpty())
+            material.getMeshList().add(routeMesh);
+        else
+            material.getMeshList().set(0,routeMesh);
 
-        ArrayList<Material> materials = new ArrayList<>();
-        materials.add(material);
+        routeModel = new Model("model-id",materials);
 
-        Model routeModel = new Model("model-id",materials);
-        scene.ajouterModel(routeModel);
-        Entite routeEntite = new Entite("route-entite",routeModel.getId());
-        scene.ajouterEntite(routeEntite,Route.class);
+        routeEntite = new Entite("route-entite",routeModel.getId());
+        scene.getDicoModel().put(routeEntite.getIdModel(),routeModel);
+
+        scene.ajouterRoute(this);
+
 
     }
 
@@ -237,7 +257,7 @@ public class Route{
 
     @Override
     public String toString() {
-        return super.toString();
+        return nomRue;
     }
 
     public Vector2f getDernierPoint() {
@@ -324,5 +344,66 @@ public class Route{
 
         return new Mesh(positions,textureCoords,tris);
     }
-}
 
+
+    public String genererNomRue() {
+
+        String fichier = LecteurFichier.lireFichier("src/Outil/listeNom");
+        String[] noms = fichier.split("[*]", -1);
+        String[] prenoms = noms[0].split(",");
+        String[] nomsFamille = noms[1].split(",");
+
+        StringBuilder nomRue = new StringBuilder();
+
+        nomRue.append("Rue ");
+        //une chance sur 8 d'avoir un saint en avant
+        if (Math.random() * 100 > 80)
+            nomRue.append("Saint-");
+
+        //ajouter le prenom
+        nomRue.append(prenoms[(int) (Math.random() * prenoms.length)]);
+
+        //une chance sur 6 d'avoir un deuxieme prenom
+        if (Math.random() * 100 > 60) {
+            nomRue.append("-");
+            nomRue.append(prenoms[(int) (Math.random() * prenoms.length)]);
+        }
+        nomRue.append(" ");
+        nomRue.append(nomsFamille[(int) (Math.random()*nomsFamille.length)]);
+        //une chance sur 9 d'avoir un deuxieme nom de famille
+        if (Math.random() * 100 > 90) {
+            nomRue.append("-");
+            nomRue.append(nomsFamille[(int) (Math.random() * nomsFamille.length)]);
+        }
+
+        //mettre un id unique pour être sur, minimiser les risques
+        nomRue.append(" ( ID : #");
+        nomRue.append(System.currentTimeMillis());
+        nomRue.append(" )");
+        return nomRue.toString();
+    }
+
+    public Entite getRouteEntite() {
+
+        return routeEntite;
+    }
+
+    public Intersection getIntersectionDepart() {
+        return intersectionDepart;
+    }
+
+    public Intersection getIntersectionFin() {
+        return intersectionFin;
+    }
+
+    public void setIntersectionDepart(Intersection intersectionDepart) {
+        this.intersectionDepart = intersectionDepart;
+    }
+    public void setIntersectionFin(Intersection intersectionFin) {
+        this.intersectionFin = intersectionFin;
+    }
+
+    public ArrayList<Vector2f> getPointsRoute() {
+        return pointsRoute;
+    }
+}

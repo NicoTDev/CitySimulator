@@ -29,10 +29,9 @@ public class Mesh {
     private Vector3f aabbMax;
 
     /**
-     *
-     * @param positions liste des positions des verticles
+     * @param positions  liste des positions des verticles
      * @param textCoords liste des positions des textures
-     * @param indices liste des indices pour relier les verticles entre eux
+     * @param indices    liste des indices pour relier les verticles entre eux
      */
     public Mesh(float[] positions, float[] textCoords, int[] indices, Vector3f aabbMin, Vector3f aabbMax) {
 
@@ -55,33 +54,33 @@ public class Mesh {
             int idVbo = glGenBuffers();
             vbosId.add(idVbo);
             FloatBuffer bufferPosition = stack.callocFloat(positions.length);
-            bufferPosition.put(0,positions);
-            glBindBuffer(GL_ARRAY_BUFFER,idVbo);
-            glBufferData(GL_ARRAY_BUFFER,bufferPosition,GL_STATIC_DRAW);
+            bufferPosition.put(0, positions);
+            glBindBuffer(GL_ARRAY_BUFFER, idVbo);
+            glBufferData(GL_ARRAY_BUFFER, bufferPosition, GL_STATIC_DRAW);
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
 
             //buffer de Texture
             idVbo = glGenBuffers();
             vbosId.add(idVbo);
             FloatBuffer bufferText = stack.callocFloat(textCoords.length);
-            bufferText.put(0,textCoords);
-            glBindBuffer(GL_ARRAY_BUFFER,idVbo);
-            glBufferData(GL_ARRAY_BUFFER,bufferText, GL_STATIC_DRAW);
+            bufferText.put(0, textCoords);
+            glBindBuffer(GL_ARRAY_BUFFER, idVbo);
+            glBufferData(GL_ARRAY_BUFFER, bufferText, GL_STATIC_DRAW);
             glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1,2,GL_FLOAT,false,0,0);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
 
             //créer la meme chose avec le vbo d'indices
             idVbo = glGenBuffers();
             vbosId.add(idVbo);
             IntBuffer bufferDindices = stack.callocInt(indices.length);
-            bufferDindices.put(0,indices);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,idVbo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER,bufferDindices,GL_STATIC_DRAW);
+            bufferDindices.put(0, indices);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idVbo);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, bufferDindices, GL_STATIC_DRAW);
 
-            glBindBuffer(GL_ARRAY_BUFFER,0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
 
         }
@@ -129,8 +128,7 @@ public class Mesh {
             //créer la meme chose avec le vbo d'indices
             idVbo = glGenBuffers();
             vbosId.add(idVbo);
-            try {
-                IntBuffer bufferDindices = stack.callocInt(indices.length);
+            IntBuffer bufferDindices = stack.callocInt(indices.length);
             bufferDindices.put(0,indices);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,idVbo);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER,bufferDindices,GL_STATIC_DRAW);
@@ -138,10 +136,6 @@ public class Mesh {
             glBindBuffer(GL_ARRAY_BUFFER,0);
             glBindVertexArray(0);
 
-            } catch (OutOfMemoryError e) {
-                System.out.println("Manque d'espace!!");
-
-            }
 
         }
     }

@@ -43,6 +43,10 @@ public class Scene {
         camera = new Camera();
         dicoModel = new HashMap<>();
         entiteSelectionne = null;
+        routes = new HashMap<>();
+        voitures = new ArrayList<>();
+        intersections = new ArrayList<>();
+
     }
 
     public void detruireProgramme() {
@@ -55,13 +59,28 @@ public class Scene {
         dicoModel.put(model.getId(),model);
     }
 
-    public void ajouterEntite(Entite entite, Class<?> classeDeEntite) {
+    public void ajouterEntite(Entite entite) {
         String idModel = entite.getIdModel();
         Model model = dicoModel.get(idModel);
         if (model == null)
             throw new IllegalArgumentException(idModel + " introuvable");
         model.getEntites().add(entite);
-        System.out.println("induit : " + classeDeEntite + " | Primitif : " + entite.getClass());
+
+        //tout depend de la nature de l'entite, on l'ajoute dans son groupe correspondant
+    }
+
+    public void ajouterVoiture(Voiture voiture) {
+        voitures.add(voiture);
+        ajouterEntite(voiture);
+    }
+    public void ajouterRoute(Route route) {
+        routes.put(route.toString(),route);
+        ajouterEntite(route.getRouteEntite());
+    }
+
+    public void ajouterIntersection(Intersection intersection) {
+        intersections.add(intersection);
+        ajouterEntite(intersection.getIntersectionEntite());
     }
 
     public Projection getProjection() {return projection;}
@@ -91,5 +110,12 @@ public class Scene {
 
     public void setSkybox(Skybox skybox) {
         this.skybox = skybox;
+    }
+
+    public HashMap<String,Route> getRoutes() {
+        return routes;
+    }
+    public ArrayList<Intersection> getIntersections() {
+        return intersections;
     }
 }

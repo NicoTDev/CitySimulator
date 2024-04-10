@@ -50,7 +50,7 @@ public class Voiture extends Entite {
 
     public float actualiserAngle() {
         System.out.println(CouleurConsole.BLEU.couleur + "a : " + angle + " a : " + max(min(angle-getAngle(),(float) Math.toRadians(10)),(float) Math.toRadians(-10)));
-        float teta3 = MathLocal.trouverAngleDeuxPoints(positionLocale,pointAAller) - getAngle();
+        float teta3 = 5;//MathLocal.trouverAngleDeuxPoints(positionLocale,pointAAller) - getAngle();
         //return max(min(teta3,(float) Math.toRadians(5)),(float)Math.toRadians(-5));
         return teta3;
     }
