@@ -42,6 +42,8 @@ public class Main implements ILogiqueJeu {
 
     long tempsActuel = System.currentTimeMillis();
 
+    double deltaPrecedent;
+
 
     public static void main(String args[]) {
         Main main = new Main();
@@ -68,6 +70,12 @@ public class Main implements ILogiqueJeu {
         //mettre les modes par défaut
         modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
         isRouteEnCours = false;
+
+        //importer les models dans le jeu
+        Model arretModel = ModelLoader.loadModel("arret-model","ressources/models/arret/Arret.obj",scene.getTextureCache());
+        scene.ajouterModel(arretModel);
+        Model lumiereModel = ModelLoader.loadModel("lumiere-model","ressources/models/lumiere/lumiere.obj",scene.getTextureCache());
+        scene.ajouterModel(lumiereModel);
 
 
 
@@ -98,18 +106,18 @@ public class Main implements ILogiqueJeu {
         Model modelVoiture = ModelLoader.loadModel("voiture-model", "ressources/models/camion/camion.obj", scene.getTextureCache());
         scene.ajouterModel(modelVoiture);
         //créer la voiture
-        Voiture voiture = new Voiture("voiture-entite", modelVoiture.getId());
-        scene.ajouterVoiture(voiture);
-        voiture.setTaille(0.5f);
+
 
         //fausse rue
         Route route = new Route(new Vector2f(0,0),scene);
         route.ajouterSegment(new Vector2f(10,0),scene);
         route.ajouterSegment(new Vector2f(10,10),scene);
+        route.ajouterSegment(new Vector2f(-10,-10),scene);
 
-        voiture.setRouteActuelle(route);
-
-
+        Voiture voiture = new Voiture("voiture-entite", modelVoiture.getId(),route,1);
+        scene.ajouterVoiture(voiture);
+        voiture.setTaille(0.5f);
+        voitures.add(voiture);
         scene.getCamera().monter(5);
         scene.getCamera().reculer(20);
     }
@@ -180,9 +188,19 @@ public class Main implements ILogiqueJeu {
     @Override
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
 
-        for (Voiture voiture : voitures) {
-            voiture.mettreAJourVoiture();
+        //chaque rafraichissement de l'écran se fait à un temps différent tout dépendant la capacité de l'ordinateur
+        //mettre un multiplicateur de temps au items du monde pour qu'ils soient constants
+        double multiplicateur;
+        //prendre le temps actuel
+        double deltaActuel = System.currentTimeMillis();
+        //trouver le temps écoulé
+        double diffDelta = deltaActuel-deltaPrecedent;
+        //mettre la valeur du delta actuel au précedent
+        deltaPrecedent = deltaActuel;
 
+        System.out.println( (int) (1000/diffDelta) + " fps");
+        for (Voiture voiture : voitures) {
+            voiture.mettreAJourVoiture(diffDelta);
 
         }
     }

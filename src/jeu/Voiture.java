@@ -5,6 +5,8 @@ import Outil.MathLocal;
 import moteur.scene.Entite;
 import org.joml.Vector2f;
 
+import java.util.ArrayList;
+
 import static java.lang.Math.*;
 
 
@@ -26,33 +28,65 @@ public class Voiture extends Entite {
 
     int indexDeRoute;
 
+    int sens;
 
-    public Voiture(String id, String idModel) {
+
+    /**
+     * @param id id de l'entite de la voiture
+     * @param idModel id du model de la voiture
+     * @param routeActuelle route de depart de la voiture
+     * @param sens sens dans laquelle il roule
+     */
+    public Voiture(String id, String idModel, Route routeActuelle,int sens) {
         super(id, idModel);
-        vitesse = 0;
+        vitesse = 1;
+        this.sens = sens;
         acceleration = 0;
         masse = 3500;
         indexDeRoute = 0;
-        pointAAller = new Vector2f(0,3);
+        this.routeActuelle = routeActuelle;
+        pointAAller = routeActuelle.getPointsRoute().get(1);
         positionLocale = new Vector2f(getPosition().x, getPosition().z);
-        angle = getRotation().angle();
+        angle = getAjustementAngle();
+        setAngle(angle);
     }
 
+    /**
+     * get l'angle de la voiture
+     * @return angle
+     */
     public float getAngle() {
         return getRotation().angle();
     }
 
 
+    /**
+     * set l'angle de la voiture
+     * @param angle nouvelle angle
+     */
     public void setAngle(float angle) {
         setRotation(0,1,0,angle);
         this.angle = angle;
     }
 
-    public float actualiserAngle() {
+    /**
+     * mettre à jour l'angle de la voiture en fonction du nouveau point à aller
+     * @return
+     */
+    public float getAjustementAngle() {
         System.out.println(CouleurConsole.BLEU.couleur + "a : " + angle + " a : " + max(min(angle-getAngle(),(float) Math.toRadians(10)),(float) Math.toRadians(-10)));
-        float teta3 = 5;//MathLocal.trouverAngleDeuxPoints(positionLocale,pointAAller) - getAngle();
-        //return max(min(teta3,(float) Math.toRadians(5)),(float)Math.toRadians(-5));
-        return teta3;
+
+        float x = pointAAller.x - positionLocale.x;
+        float y = pointAAller.y - positionLocale.y;
+        float angle = (float) abs(atan(y/x));
+        if (x < 0 && y < 0)
+            angle += PI;
+        else if (x < 0 && y > 0)
+            angle = (float)(PI-angle);
+        else if (x > 0 && y < 0)
+            angle = (float)(2*PI-angle);
+        //System.out.println(CouleurConsole.BLEU.couleur + "x : " + x + "\ny : " + y + "\nangle : " + angle);
+        return angle;
     }
 
     public Vector2f getProchainPoint() {
@@ -93,18 +127,14 @@ public class Voiture extends Entite {
         positionLocale.y = y;
     }
 
-    public void mettreAJourVoiture() {
-        //trouvez l'angle à avoir
-        float angleAAjouter = actualiserAngle();
-        setAngle(getAngle()+angleAAjouter);
-        //mettre à jour la position
-        if (getDistanceDestinationPoint() > 0.1f) {
-            Vector2f positionsAdd = getProchainPoint();
-            Vector2f getVecteurDerapage;
-            setPositionLocale(getPositionLocale().x + positionsAdd.x, getPositionLocale().y + positionsAdd.y);
-        }
-        else {
-            pointAAller = (Vector2f) (routeActuelle.getPointsBezier().get(indexDeRoute++));
+    public void mettreAJourVoiture(double temps) {
+
+        setPositionLocale(pointAAller.x,pointAAller.y);
+        try {
+            pointAAller = routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller)+1);
+            setAngle(getAjustementAngle());
+        } catch (Exception e) {
+            pointAAller = routeActuelle.getPointsRoute().get(0);
         }
     }
 
@@ -116,13 +146,19 @@ public class Voiture extends Entite {
 
 
     //DEV------------------------------
-
-    public float getDistanceDestinationPoint() {
-        return (float) sqrt(Math.pow(pointAAller.x-positionLocale.x,2)+Math.pow(pointAAller.y-positionLocale.y,2));
-    }
     public void setPointAAller(float x, float y) {
         pointAAller.x = x;
         pointAAller.y = y;
+    }
+
+    public void setAngleSpawn() {
+        int indexPointAAller = routeActuelle.getPointsRoute().indexOf(pointAAller);
+        ArrayList<Vector2f> pts = routeActuelle.getPointsRoute();
+        //trouvez le vecteur direction
+        Vector2f vecteurDirection = new Vector2f(pts.get(indexPointAAller+1)).sub(pointAAller).normalize();
+        float angle = new Vector2f(1,0).angle(vecteurDirection);
+        vecteurDirection.angle(new Vector2f().zero());
+        this.setAngle(angle);
     }
 
     public void getVecteurDerapage() {}

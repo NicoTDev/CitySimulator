@@ -1,18 +1,14 @@
 package jeu;
 
 import Outil.Bezier;
-import Outil.CouleurConsole;
-import moteur.Fenetre;
 import moteur.Graphique.*;
 import moteur.scene.Entite;
 import moteur.scene.Scene;
 import org.joml.Math;
 import org.joml.Vector2f;
-import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  *  Cet algorithme utilise les courbes de Bézier pour tracer les routes
@@ -20,36 +16,49 @@ import java.util.List;
  */
 public class Route {
 
+    //coefficient de frottement de la route
     final float COEFFICIENT_FROTTEMENT = 10;
 
+    float longueurCurveEstimee;
+
+    //taille de la route (1 par défaut)
     final float TAILLEROUTE = 1;
 
 
     //points d'ancrage et de controle
     private ArrayList<Vector2f> pointsBezier;
 
-    //points sur la droite (à enlever dans l'avenir)
+    //point pour créer les vertexs
     private ArrayList<Vector2f> pointsRoute;
 
-    private String nomRue;
+    //nom de la rue
+    private String nomRoute;
 
+    //model de la route
     private Model routeModel;
 
+    //mesh de la route
     private Mesh routeMesh;
 
+    //material de la route
     private Material material;
-
     private ArrayList<Material> materials;
 
+    //Entite de la route
     private Entite routeEntite;
 
+    //variables pour stocker l'intersection de depart et de fin de la route
     private Intersection intersectionDepart;
 
     private Intersection intersectionFin;
 
+    /**
+     * @param pointDepart point initiale de la route
+     * @param scene ref de la scene
+     */
     public Route(Vector2f pointDepart, Scene scene) {
         //créer les points initiales de la route
-        nomRue = genererNomRue();
+        nomRoute = genererNomRoute();
         pointsRoute = new ArrayList<>();
         pointsBezier = new ArrayList<>();
 
@@ -71,10 +80,10 @@ public class Route {
         materials = new ArrayList<>();
         materials.add(material);
 
-        routeModel = new Model("model-"+nomRue,materials);
+        routeModel = new Model("model-"+ nomRoute,materials);
         scene.ajouterModel(routeModel);
 
-        routeEntite = new Entite("entite-"+nomRue,routeModel.getId());
+        routeEntite = new Entite("entite-"+ nomRoute,routeModel.getId());
         scene.ajouterRoute(this);
 
 
@@ -154,8 +163,6 @@ public class Route {
             pointsRoute.add(v);
         }
 
-
-
         routeMesh = genererRouteMesh(pointsRoute, scene);
 
         if (material.getMeshList().isEmpty())
@@ -170,6 +177,12 @@ public class Route {
 
         scene.ajouterRoute(this);
 
+        //for (Vector2f p : pointsRoute) {
+        //    Entite entite = new Entite("","arret-model");
+        //    entite.setPosition(p.x,0.2f,p.y);
+        //    scene.ajouterEntite(entite);
+        //}
+
 
     }
 
@@ -182,16 +195,10 @@ public class Route {
         return pointsBezier.size();
     }
 
-    public Route(ArrayList<Vector2f> points) {
-        this.pointsBezier = points;
-    }
 
     public ArrayList<Vector2f> getPointsBezier() {
         return pointsBezier;
     }
-
-    //public void genererPointDeRoute(Scene scene) {
-    //}
 
     public ArrayList<Vector2f> getPointsSegments(int index) {
         ArrayList<Vector2f> points = new ArrayList<>();
@@ -217,10 +224,8 @@ public class Route {
             ArrayList<Vector2f> pointsSegments = getPointsSegments(indexSegment);
 
             float longueurControl = pointsSegments.get(0).distance(pointsSegments.get(1)) + pointsSegments.get(1).distance(pointsSegments.get(2)) + pointsSegments.get(2).distance(pointsSegments.get(3));
-            float longueurCurveEstimee = pointsSegments.get(0).distance(pointsSegments.get(3)) + longueurControl / 2.0f;
+            longueurCurveEstimee = pointsSegments.get(0).distance(pointsSegments.get(3)) + longueurControl / 2.0f;
             int divisions = (int) Math.ceil(longueurCurveEstimee * precision * 10);
-
-
 
 
             float t = 0.0000001f;
@@ -257,8 +262,9 @@ public class Route {
 
     @Override
     public String toString() {
-        return nomRue;
+        return nomRoute;
     }
+
 
     public Vector2f getDernierPoint() {
         return pointsRoute.get(pointsRoute.size()-1);
@@ -279,7 +285,8 @@ public class Route {
 
         Vector2f[] verticles = new Vector2f[points.size() * 2];
         Vector2f[] uvs = new Vector2f[ verticles.length ];
-        int[] tris = new int[(points.size()-1)*6];
+        int nombreTriangle = 2 * (pointsRoute.size()-1) + (intersectionFin != null ? 2 : 0);
+        int[] tris = new int[nombreTriangle * 3];
         int vertIndex = 0;
         int triIndex = 0;
 
@@ -324,6 +331,14 @@ public class Route {
 
         }
 
+
+        //System.out.println(tris[tris.length-1]);
+
+        //
+        if (intersectionFin != null) {
+
+        }
+
         //créer l'array de positions final
         float[] positions = new float[verticles.length*3];
         int positionIndex = 0;
@@ -346,7 +361,7 @@ public class Route {
     }
 
 
-    public String genererNomRue() {
+    public String genererNomRoute() {
 
         String fichier = LecteurFichier.lireFichier("src/Outil/listeNom");
         String[] noms = fichier.split("[*]", -1);
@@ -406,4 +421,7 @@ public class Route {
     public ArrayList<Vector2f> getPointsRoute() {
         return pointsRoute;
     }
+
+
+
 }

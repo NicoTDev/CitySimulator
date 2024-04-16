@@ -33,15 +33,4 @@ public abstract class Bezier {
 
     }
 
-
-    public static ArrayList<Vector2f> genererCurve(Vector2f v1, Vector2f v2, Vector2f v3, Vector2f v4) {
-        ArrayList<Vector2f> liste = new ArrayList<>();
-
-        for (float i = 0 ; i < 1; i+=0.01) {
-            liste.add(cubique(v1,v2,v3,v4,i));
-        }
-
-        return liste;
-    }
-
 }

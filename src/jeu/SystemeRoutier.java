@@ -118,9 +118,9 @@ public class SystemeRoutier {
                                 direction.div(1.5f);
                                 routeEnConstruction.ajouterSegment(new Vector2f((intersectionPoint.x + direction.x), (intersectionPoint.y + direction.y)), scene);
                                 isRouteEnCours = false;
-                                direction = new Vector2f(intersectionPoint).sub(intersection.getPosition()).normalize();
-                                routeEnConstruction.ajouterSegment(new Vector2f(intersectionPoint.x,intersectionPoint.y), scene);
                                 intersection.ajouterRoute(routeEnConstruction,i);
+                                routeEnConstruction.setIntersectionFin(intersection);
+                                routeEnConstruction.ajouterSegment(new Vector2f(intersectionPoint.x,intersectionPoint.y), scene);
                             }
                             //sinon, on demarre une route
                             else {
@@ -129,6 +129,7 @@ public class SystemeRoutier {
                                 Vector2f direction = new Vector2f(intersectionPoint).sub(intersection.getPosition()).normalize().mul(1.5f);
                                 routeEnConstruction.ajouterSegment(new Vector2f((intersectionPoint.x + direction.x), (intersectionPoint.y + direction.y)), scene);
                                 direction.mul(2f);
+                                routeEnConstruction.setIntersectionDepart(intersection);
                                 routeEnConstruction.ajouterSegment(new Vector2f((intersectionPoint.x + direction.x), (intersectionPoint.y + direction.y)), scene);
                                 intersection.ajouterRoute(routeEnConstruction, i);
                             }
