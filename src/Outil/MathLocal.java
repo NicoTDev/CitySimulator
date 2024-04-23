@@ -7,7 +7,14 @@ import static java.lang.Math.min;
 
 public abstract class MathLocal {
 
-    public static float clamp(float value, float min, float max) {
-        return Math.min(Math.max(min,value),max);
+    /**
+     *
+     * @param valeur valeur de base
+     * @param min minimum acceptable
+     * @param max maximum acceptable
+     * @return valeur comprise entre le min et le max
+     */
+    public static float clamp(float valeur, float min, float max) {
+        return Math.min(Math.max(min,valeur),max);
     }
 }

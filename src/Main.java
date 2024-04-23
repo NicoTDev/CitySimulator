@@ -83,7 +83,7 @@ public class Main implements ILogiqueJeu {
         terrain = new Terrain();
         terrain.genererTerrain(70, 70);
 
-        systemeRoutier = new SystemeRoutier(terrain,scene);
+        systemeRoutier = new SystemeRoutier(terrain,scene, fenetre);
 
 
         //creer un terrain
@@ -174,7 +174,7 @@ public class Main implements ILogiqueJeu {
         if (entreSouris.isBoutonGauchePresse() && System.currentTimeMillis() > tempsActuel + 500) {
             tempsActuel = System.currentTimeMillis();
 
-            systemeRoutier.interagir(fenetre,entreSouris);
+            systemeRoutier.interagir(entreSouris);
         }
     }
 
@@ -198,9 +198,10 @@ public class Main implements ILogiqueJeu {
         //mettre la valeur du delta actuel au précedent
         deltaPrecedent = deltaActuel;
 
-        System.out.println( (int) (1000/diffDelta) + " fps");
+        //System.out.println( (int) (1000/diffDelta) + " fps");
         for (Voiture voiture : voitures) {
-            voiture.mettreAJourVoiture(diffDelta);
+            if (diffDelta/1000 < 1)
+                voiture.mettreAJourVoiture(diffDelta/1000);
 
         }
     }

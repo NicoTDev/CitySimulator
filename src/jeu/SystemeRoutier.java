@@ -9,7 +9,9 @@ import moteur.scene.Scene;
 import org.joml.*;
 
 import java.lang.Math;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.TreeMap;
 
 public class SystemeRoutier {
 
@@ -24,12 +26,18 @@ public class SystemeRoutier {
 
     Scene scene;
 
-    int nombreSegment = 1;
+    Fenetre fenetre;
 
-    public SystemeRoutier(Terrain terrain, Scene scene) {
+    /**
+     * @param terrain reference du terrain
+     * @param scene reference de la scene
+     * @param fenetre reference de la fenetre
+     */
+    public SystemeRoutier(Terrain terrain, Scene scene, Fenetre fenetre) {
 
         this.terrain = terrain;
         this.scene = scene;
+        this.fenetre = fenetre;
 
         this.isRouteEnCours = false;
         routeEnConstruction = null;
@@ -39,15 +47,19 @@ public class SystemeRoutier {
 
     }
 
-    public void interagir(Fenetre fenetre, EntreSouris entreSouris) {
+    /**
+     * sert à savoir quelle interaction sera lancé par l'utilisateur
+     * @param entreSouris touche appuyée
+     */
+    public void interagir(EntreSouris entreSouris) {
         switch (modeUtilisateur) {
 
             case CONSTRUCTEURDEROUTE -> {
-                placerPointRoute(fenetre, entreSouris.getPositionActuelle());
+                placerPointRoute(entreSouris.getPositionActuelle());
             }
 
             case PLACEURINTERSECTION -> {
-                placerIntersection(fenetre, entreSouris.getPositionActuelle());
+                placerIntersection(entreSouris.getPositionActuelle());
             }
             case CUSTOMIZERINTERSECTION -> {
             }
@@ -55,7 +67,12 @@ public class SystemeRoutier {
     }
 
 
-    public Vector4f getDirectionSouris(Fenetre fenetre, Vector2f positionSouris) {
+    /**
+     * sert à passer d'un point sur l'écran à un point sur la carte à un vecteur dirigé vers l'intérieur de l'écran
+     * @param positionSouris
+     * @return un vecteur qui est dirigé vers le centre de l'univers
+     */
+    public Vector4f getDirectionSouris(Vector2f positionSouris) {
         int largeurFenetre = fenetre.getLargeur();
         int hauteurFenetre = fenetre.getHauteur();
 
@@ -80,10 +97,15 @@ public class SystemeRoutier {
         return directionSouris;
     }
 
-    public void placerPointRoute(Fenetre fenetre, Vector2f pos) {
+    /**
+     * fonction pour placer un point de route
+     * @param pos position de la souris
+     */
+    public void placerPointRoute(Vector2f pos) {
 
 
-        Vector4f directionSouris = getDirectionSouris(fenetre, pos);
+        //get la direction de la souris de base
+        Vector4f directionSouris = getDirectionSouris(pos);
 
         //ici on initialise les valeurs de minimum et de maximum du terrain
         Vector4f terrainMin = new Vector4f(-Math.round((terrain.getLargeur() - 1) / 2.0f), 0.0f, -Math.round((terrain.getHauteur() - 1) / 2.0f), 1.0f);
@@ -158,9 +180,13 @@ public class SystemeRoutier {
         }
     }
 
-    public void placerIntersection(Fenetre fenetre, Vector2f pos) {
+    /**
+     * méthode pour placer un point intersection sur la carte
+     * @param pos position de la souris
+     */
+    public void placerIntersection(Vector2f pos) {
 
-        Vector4f directionSouris = getDirectionSouris(fenetre, pos);
+        Vector4f directionSouris = getDirectionSouris(pos);
         Vector3f centre = scene.getCamera().getPosition();
 
         //ici on initialise les valeurs de minimum et de maximum du terrain
@@ -207,8 +233,51 @@ public class SystemeRoutier {
 
     }
 
+    /**
+     *
+     * @param modeUtilisateur
+     */
     public void setModeUtilisateur(Mode modeUtilisateur) {
         isRouteEnCours = false;
         this.modeUtilisateur = modeUtilisateur;
     }
+
+
+    /**
+     * sert à trouver un chemin pour passer de la route de départ à la route finale
+     * @param routeDepart route de départ
+     * @param routeArrive route d'arrivée
+     * @return arrayList qui indique le chemin
+     */
+    public ArrayList<Route> getChemin(Route routeDepart, Route routeArrive) {
+        ArrayList<Intersection> intersectionsEnregistre = new ArrayList<>();
+        ArrayList<Route> chemin = new ArrayList<>();
+
+        //partie de code à faire (arbre)
+
+
+        return chemin;
+    }
+
+    /**
+     * sert à trouver l'intersection entre les deux routes
+     * @param intersectionA intersection A
+     * @param intersectionB intersection B
+     * @return la route qui relie les deux (null si aucune)
+     */
+    public Route getRouteEntreIntersections(Intersection intersectionA, Intersection intersectionB) {
+        for (Route routeA : intersectionA.getRoutesLiee()) {
+
+            for (Route routeB : intersectionB.getRoutesLiee()) {
+                if (routeA == routeB)
+                    return routeA;
+            }
+        }
+
+        return null;
+    }
+
+    //pour rouler, si l'intersection de fin est l'intersection de debut, on fait rien, si l'intersection de fin de la route actuelle de la voiture est l'intersection de fin de la seconde route aussi, on fait *-1 au sens
+
+
 }
