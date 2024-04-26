@@ -6,6 +6,8 @@ import moteur.scene.Entite;
 import org.joml.Vector2f;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import static java.lang.Math.*;
 
@@ -140,7 +142,7 @@ public class Voiture extends Entite {
                 int i = 0;
                 while(routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller) + ++i).distance(getPositionLocale()) <= (vitesse/1000)) {
                 }
-                System.out.println(CouleurConsole.JAUNE.couleur + routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller) + ++i).distance(getPositionLocale()) + CouleurConsole.RESET.couleur);
+                //System.out.println(CouleurConsole.JAUNE.couleur + routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller) + ++i).distance(getPositionLocale()) + CouleurConsole.RESET.couleur);
                 pointAAller = routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller)+i);
                 setAngle(angle + getAjustementAngle());
                 //avec le limitateur
@@ -187,6 +189,19 @@ public class Voiture extends Entite {
     public void setRouteActuelle(Route routeActuelle) {
         this.routeActuelle = routeActuelle;
         pointAAller = routeActuelle.getPremierPoint();
+    }
+
+    public ArrayList<Vector2f> getPointRoute() {
+        return routeActuelle.getPointsRoute();
+    }
+    public ArrayList<Vector2f> getPointRouteInverse() {
+        ArrayList<Vector2f> arrayInverse = new ArrayList<>(routeActuelle.getPointsRoute());
+        Collections.reverse(arrayInverse);
+        return arrayInverse;
+    }
+
+    public Route getRouteActuelle() {
+        return routeActuelle;
     }
 
 }

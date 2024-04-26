@@ -269,7 +269,7 @@ public class SystemeRoutier {
         for (Route routeA : intersectionA.getRoutesLiee()) {
 
             for (Route routeB : intersectionB.getRoutesLiee()) {
-                if (routeA == routeB)
+                if (routeA == routeB && routeA != null)
                     return routeA;
             }
         }

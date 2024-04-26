@@ -422,6 +422,10 @@ public class Route {
         return pointsRoute;
     }
 
+    public float getLongueur() {
+        return getPointsRoute().size();
+    }
+
 
 
 }

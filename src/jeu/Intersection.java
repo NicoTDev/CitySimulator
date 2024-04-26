@@ -14,6 +14,8 @@ public class Intersection {
 
     private Route[] routesLiee;
 
+    private String nom;
+
     private Vector2f position;
 
     private Vector2f[] pointsIntersection;
@@ -134,8 +136,7 @@ public class Intersection {
     }
 
     public String genererNom() {
-
-        return "intersection # " + scene.getIntersections().size() + " ( ID : #" + System.currentTimeMillis() + " )";
+        return "Intersection # " + scene.getIntersections().size() + " ( ID : #" + System.currentTimeMillis() + " )";
     }
 
     public Vector2f[] getPointsIntersection() {
@@ -192,4 +193,8 @@ public class Intersection {
     }
 
     public void getSignalisation() {}
+
+    public String toString() {
+        return this.id;
+    }
 }

@@ -19,7 +19,6 @@ import java.util.Map;
 public class Scene {
 
 
-    private Skybox skybox;
     private Entite entiteSelectionne;
 
     private Projection projection;
@@ -101,16 +100,6 @@ public class Scene {
         this.entiteSelectionne = entite;
     }
 
-
-    public Skybox getSkyBox() {
-
-        return skybox;
-
-    }
-
-    public void setSkybox(Skybox skybox) {
-        this.skybox = skybox;
-    }
 
     public HashMap<String,Route> getRoutes() {
         return routes;

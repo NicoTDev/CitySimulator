@@ -7,7 +7,6 @@ import moteur.Graphique.*;
 import moteur.scene.Camera;
 import moteur.scene.Entite;
 import moteur.scene.Scene;
-import moteur.scene.Skybox;
 import org.joml.*;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
@@ -40,6 +39,8 @@ public class Main implements ILogiqueJeu {
 
     Terrain terrain;
 
+    Entite skyBox;
+
     long tempsActuel = System.currentTimeMillis();
 
     double deltaPrecedent;
@@ -66,6 +67,15 @@ public class Main implements ILogiqueJeu {
      */
     @Override
     public void initialisation(Fenetre fenetre, Scene scene, Rendu rendu) {
+
+
+        //créer la skybox
+        Model skyboxModel = ModelLoader.loadModel("skybox-model","ressources/models/skybox/skybox.obj",scene.getTextureCache());
+        skyBox = new Entite("skybox-entite",skyboxModel.getId());
+        skyBox.setTaille(500);
+        skyBox.setPosition(0,-50,0);
+        scene.ajouterModel(skyboxModel);
+        scene.ajouterEntite(skyBox);
 
         //mettre les modes par défaut
         modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
@@ -114,7 +124,11 @@ public class Main implements ILogiqueJeu {
         route.ajouterSegment(new Vector2f(10,10),scene);
         route.ajouterSegment(new Vector2f(-10,-10),scene);
 
+
+
         Voiture voiture = new Voiture("voiture-entite", modelVoiture.getId(),route,1);
+        System.out.println(voiture.getPointRoute());
+        System.out.println(voiture.getPointRouteInverse());
         scene.ajouterVoiture(voiture);
         voiture.setTaille(0.5f);
         voitures.add(voiture);
@@ -158,6 +172,13 @@ public class Main implements ILogiqueJeu {
             systemeRoutier.setModeUtilisateur(Mode.CUSTOMIZERINTERSECTION);
         if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_0))
             systemeRoutier.setModeUtilisateur(Mode.SPECTATEUR);
+        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_1) && System.currentTimeMillis() > tempsActuel + 500) {
+            tempsActuel = System.currentTimeMillis();
+            Graph graph = new Graph(voitures.get(0).getRouteActuelle().getIntersectionFin(),systemeRoutier);
+            System.out.println(graph.itemsAdjoints);
+            //System.out.println(systemeRoutier);
+        }
+
 
         camera.getPosition().set(new Vector3f(MathLocal.clamp(camera.getPosition().x,-terrain.getLargeur()/2.0f,terrain.getLargeur()/2.0f),
                 MathLocal.clamp(camera.getPosition().y,0.5f,30),MathLocal.clamp(camera.getPosition().z,-terrain.getHauteur()/2.0f,terrain.getHauteur()/2.0f)));
@@ -188,6 +209,8 @@ public class Main implements ILogiqueJeu {
     @Override
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
 
+
+        skyBox.setPosition(scene.getCamera().getPosition().x+50,scene.getCamera().getPosition().y-50,scene.getCamera().getPosition().z+50);
         //chaque rafraichissement de l'écran se fait à un temps différent tout dépendant la capacité de l'ordinateur
         //mettre un multiplicateur de temps au items du monde pour qu'ils soient constants
         double multiplicateur;
