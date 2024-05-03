@@ -1,23 +1,23 @@
 package moteur.scene;
 
 import jeu.Intersection;
+import jeu.Maison;
 import jeu.Route;
 import jeu.Voiture;
-import moteur.Graphique.Mesh;
+import moteur.Graphique.MeshGui;
+import moteur.ILogiqueGui;
 import moteur.Graphique.Model;
 import moteur.Graphique.TextureCache;
-import moteur.Moteur;
-import org.lwjgl.system.Pointer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Classe responsable d'entreposer les éléments 3D du jeu
  */
 public class Scene {
 
+    private ILogiqueGui guiLogique;
 
     private Entite entiteSelectionne;
 
@@ -36,6 +36,9 @@ public class Scene {
 
     private ArrayList<Intersection> intersections;
 
+    private ArrayList<Maison> maisons;
+
+
     public Scene(int largeur, int hauteur) {
         projection = new Projection(largeur,hauteur);
         textureCache = new TextureCache();
@@ -45,13 +48,14 @@ public class Scene {
         routes = new HashMap<>();
         voitures = new ArrayList<>();
         intersections = new ArrayList<>();
+        maisons = new ArrayList<>();
 
     }
 
     public void detruireProgramme() {
         dicoModel.values().forEach(Model::detruireProgramme);
     }
-    public void resize(int largeur, int hauteur) {
+    public void redimensionner(int largeur, int hauteur) {
         projection.mettreAJour(largeur,hauteur);
     }
     public void ajouterModel(Model model) {
@@ -82,6 +86,11 @@ public class Scene {
         ajouterEntite(intersection.getIntersectionEntite());
     }
 
+    public void ajouterMaison(Maison maison) {
+        maisons.add(maison);
+        ajouterEntite(maison);
+    }
+
     public Projection getProjection() {return projection;}
 
     public HashMap<String, Model> getDicoModel() {return dicoModel;}
@@ -107,4 +116,17 @@ public class Scene {
     public ArrayList<Intersection> getIntersections() {
         return intersections;
     }
+
+    public ILogiqueGui getLogiqueGui() {
+        return guiLogique;
+    }
+    public void setGuiLogique(ILogiqueGui logiqueGui) {
+        this.guiLogique = logiqueGui;
+    }
+
+    public ArrayList<Maison> getMaisons() {
+        return maisons;
+    }
+
+    public ArrayList<Voiture> getVoitures() { return voitures;}
 }

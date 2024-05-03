@@ -6,7 +6,7 @@ public class Arret extends Signalisation {
 
     Queue<Voiture> voituresEnAttente;
 
-    public Arret() {
-        CHEMINOBJET = "ressources/models/arret/Arret.obj";
-    }
+    public static final String CHEMINOBJET = "ressources/models/arret/Arret.obj";
+
+    public Arret() {}
 }

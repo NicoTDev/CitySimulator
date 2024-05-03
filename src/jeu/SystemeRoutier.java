@@ -11,6 +11,7 @@ import org.joml.*;
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Stack;
 import java.util.TreeMap;
 
 public class SystemeRoutier {
@@ -19,8 +20,6 @@ public class SystemeRoutier {
     Terrain terrain;
 
     Route routeEnConstruction;
-
-    boolean isRouteEnCours;
 
     Mode modeUtilisateur;
 
@@ -38,8 +37,6 @@ public class SystemeRoutier {
         this.terrain = terrain;
         this.scene = scene;
         this.fenetre = fenetre;
-
-        this.isRouteEnCours = false;
         routeEnConstruction = null;
 
         modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
@@ -53,11 +50,9 @@ public class SystemeRoutier {
      */
     public void interagir(EntreSouris entreSouris) {
         switch (modeUtilisateur) {
-
             case CONSTRUCTEURDEROUTE -> {
                 placerPointRoute(entreSouris.getPositionActuelle());
             }
-
             case PLACEURINTERSECTION -> {
                 placerIntersection(entreSouris.getPositionActuelle());
             }
@@ -130,24 +125,26 @@ public class SystemeRoutier {
                 for (int i = 0 ; i < intersection.getPointsIntersection().length; i++) {
 
                     Vector2f intersectionPoint = intersection.getPointsIntersection()[i];
+
+                    //si on est sur une intersection
                     if (Math.abs(intersectionPoint.x - point.x) < 0.25 && Math.abs(intersectionPoint.y - point.z) < 0.25) {
                         isSurIntersection = true;
                         if (intersection.getRoutesLiee()[i] == null ) {
+
                             //regardez si la route se termine à l'intersection
-                            if (isRouteEnCours) {
+                            if (routeEnConstruction != null) {
                                 Vector2f direction = new Vector2f(intersectionPoint).sub(intersection.getPosition()).normalize().mul(2);
                                 routeEnConstruction.ajouterSegment(new Vector2f((intersectionPoint.x + direction.x), (intersectionPoint.y + direction.y)), scene);
                                 direction.div(1.5f);
                                 routeEnConstruction.ajouterSegment(new Vector2f((intersectionPoint.x + direction.x), (intersectionPoint.y + direction.y)), scene);
-                                isRouteEnCours = false;
                                 intersection.ajouterRoute(routeEnConstruction,i);
                                 routeEnConstruction.setIntersectionFin(intersection);
                                 routeEnConstruction.ajouterSegment(new Vector2f(intersectionPoint.x,intersectionPoint.y), scene);
+                                routeEnConstruction = null;
                             }
                             //sinon, on demarre une route
                             else {
                                 routeEnConstruction = new Route(new Vector2f(intersectionPoint.x, intersectionPoint.y), scene);
-                                isRouteEnCours = true;
                                 Vector2f direction = new Vector2f(intersectionPoint).sub(intersection.getPosition()).normalize().mul(1.5f);
                                 routeEnConstruction.ajouterSegment(new Vector2f((intersectionPoint.x + direction.x), (intersectionPoint.y + direction.y)), scene);
                                 direction.mul(2f);
@@ -161,22 +158,48 @@ public class SystemeRoutier {
 
                 }
             }
+
+            //regarder si l'utilisateur appuie sur une maison
+            boolean isSurMaison = false;
+            for (Maison maison : scene.getMaisons()) {
+                //si on est sur une maisom
+                if (maison.getRouteReliee() == null) {
+                    if (new Vector2f(maison.getPosition().x,maison.getPosition().z).distance(new Vector2f(point.x,point.z)) < 1) {
+                        isSurMaison = true;
+                        //s'il n'a pas de route en construction, on démarre une route
+                        if (routeEnConstruction == null) {
+                            Route nouvelleRoute = new Route(new Vector2f(maison.getPosition().x, maison.getPosition().z), scene);
+                            routeEnConstruction = nouvelleRoute;
+                            routeEnConstruction.setIntersectionDepart(new Intersection(scene, routeEnConstruction));
+                            maison.setRouteReliee(nouvelleRoute);
+                            nouvelleRoute.ajouterSegment(new Vector2f(maison.getPointDevantMaison().x, maison.getPointDevantMaison().y), scene);
+                            scene.ajouterRoute(nouvelleRoute);
+                        }
+                        //s'il y avait déjà une route, on conclut la rue en la reliant à la maison
+                        else {
+
+                            maison.setRouteReliee(routeEnConstruction);
+                            routeEnConstruction.ajouterSegment(new Vector2f(maison.getPointDevantMaison().x, maison.getPointDevantMaison().y), scene);
+                            routeEnConstruction.ajouterSegment(new Vector2f(maison.getPosition().x, maison.getPosition().z), scene);
+                            routeEnConstruction.setIntersectionFin(new Intersection(scene, routeEnConstruction));
+                            routeEnConstruction = null;
+
+                    }
+                }
+                }
+
+
+            }
             //si ce n'était pas sur une intersection, faire la procédure habituelle
-            if (!isSurIntersection) {
+            if (!(isSurIntersection||isSurMaison)) {
 
                 //soit créer une route, soit ajouter un segment si cette route n'existe pas
-                if (isRouteEnCours) {
+                if (routeEnConstruction != null) {
                     routeEnConstruction.ajouterSegment(new Vector2f(point.x, point.z), scene);
                 } else {
                     routeEnConstruction = new Route(new Vector2f(point.x, point.z), scene);
-                    isRouteEnCours = true;
                 }
             }
-
-            //System.out.println(scene.getRoutes().keySet());
-
-            //System.out.println( plusPetiteDistance == Float.POSITIVE_INFINITY ? plusPetiteDistance : CouleurConsole.BLEU.couleur + plusPetiteDistance);
-
         }
     }
 
@@ -207,9 +230,7 @@ public class SystemeRoutier {
                     && route.getIntersectionDepart() == null) {
                 plusPetiteDistance = t.x;
 
-                //System.out.println("Assez proche");
                 Intersection intersection = new Intersection(scene,route,-1);
-                System.out.println(route);
 
 
             }
@@ -221,7 +242,6 @@ public class SystemeRoutier {
                 plusPetiteDistance = t.x;
 
                 Intersection intersection = new Intersection(scene,route,1);
-                System.out.println(route);
 
             }
 
@@ -238,25 +258,23 @@ public class SystemeRoutier {
      * @param modeUtilisateur
      */
     public void setModeUtilisateur(Mode modeUtilisateur) {
-        isRouteEnCours = false;
+        routeEnConstruction = null;
         this.modeUtilisateur = modeUtilisateur;
     }
 
 
     /**
      * sert à trouver un chemin pour passer de la route de départ à la route finale
-     * @param routeDepart route de départ
-     * @param routeArrive route d'arrivée
      * @return arrayList qui indique le chemin
      */
-    public ArrayList<Route> getChemin(Route routeDepart, Route routeArrive) {
-        ArrayList<Intersection> intersectionsEnregistre = new ArrayList<>();
-        ArrayList<Route> chemin = new ArrayList<>();
+        public Stack<Route> getChemin(Maison maisonDepart, Maison maisonArrive) {
+        Graph graph = new Graph(maisonDepart.getIntersectionMaison(),this);
+        Stack<Intersection> chemin = graph.getCheminIntersection(maisonDepart.getIntersectionMaison(),maisonArrive.getIntersectionMaison());
+        Stack<Route> cheminRoute = new Stack<>();
 
-        //partie de code à faire (arbre)
-
-
-        return chemin;
+        //partie de code à faire (Dijkstra)
+        System.out.println(chemin);
+        return cheminRoute;
     }
 
     /**

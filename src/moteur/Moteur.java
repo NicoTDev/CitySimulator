@@ -9,6 +9,7 @@ import moteur.scene.Scene;
  */
 public class Moteur {
 
+
     public static final int TARGET_UPS = 30;
 
     private final ILogiqueJeu logiqueJeu;
@@ -27,7 +28,7 @@ public class Moteur {
 
     public Moteur(String titreFenetre, Fenetre.optionFenetre opts, ILogiqueJeu logiqueJeu) {
         fenetre = new Fenetre(titreFenetre, opts, () -> {
-            resize();
+            redimensionner();
             return null;
         });
         targetFps = opts.fps;
@@ -40,11 +41,11 @@ public class Moteur {
     }
 
 
-    private void resize() {
-        int width = fenetre.getLargeur();
-        int height = fenetre.getHauteur();
-        scene.resize(width, height);
-        rendu.resize(width, height);
+    private void redimensionner() {
+        int largeur = fenetre.getLargeur();
+        int hauteur = fenetre.getHauteur();
+        scene.redimensionner(largeur, hauteur);
+        rendu.redimensionner(largeur, hauteur);
     }
 
     private void run() {
@@ -55,6 +56,7 @@ public class Moteur {
         float timeR = targetFps > 0 ? 1000.0f / targetFps : 0;
         float deltaUpdate = 0;
         float deltaFps = 0;
+        ILogiqueGui logiqueGui = scene.getLogiqueGui();
 
         long updateTime = tempsInitial;
         while (isActif && !fenetre.isWindowShouldClose()) {
@@ -69,8 +71,8 @@ public class Moteur {
             //gérer l'input de l'utilisateur
             if (targetFps <= 0 || deltaFps >= 1) {
                 fenetre.getEntreSouris().entree();
-                //boolean inputConsumed = iGuiInstance != null ? iGuiInstance.handleGuiInput(scene, window) : false;
-                logiqueJeu.entree(fenetre, scene, present - tempsInitial);
+                boolean entreeUtilise = logiqueGui != null && logiqueGui.getCommandeInput(scene, fenetre);
+                logiqueJeu.entree(fenetre, scene, present - tempsInitial, entreeUtilise);
             }
 
             //gérer la mise à jour de la logique du jeu

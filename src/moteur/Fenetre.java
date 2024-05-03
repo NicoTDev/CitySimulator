@@ -74,7 +74,7 @@ public class Fenetre {
         if (refFenetre == NULL)
             throw new RuntimeException("La fenetre n'a pas pu etre creee");
 
-        glfwSetFramebufferSizeCallback(refFenetre, ((window, l, h) -> resized(l,h)));
+        glfwSetFramebufferSizeCallback(refFenetre, ((window, l, h) -> redimensionner(l,h)));
 
         glfwSetErrorCallback((int errorCode, long msgPtr) ->
                 Logger.error("Error code [{}], msg [{}]", errorCode, MemoryUtil.memUTF8(msgPtr))
@@ -82,6 +82,7 @@ public class Fenetre {
 
         glfwSetKeyCallback(refFenetre, (window, key, scancode, action, mods) -> {
             keyCallBack(key, action);
+
         });
 
         glfwMakeContextCurrent(refFenetre);
@@ -134,7 +135,7 @@ public class Fenetre {
         return entreSouris;
     }
 
-    protected void resized(int width, int height) {
+    protected void redimensionner(int width, int height) {
         this.largeur = width;
         this.hauteur = height;
         try {
@@ -162,5 +163,9 @@ public class Fenetre {
 
     public int getHauteur() {
         return hauteur;
+    }
+
+    public long getRefFenetre() {
+        return refFenetre;
     }
 }

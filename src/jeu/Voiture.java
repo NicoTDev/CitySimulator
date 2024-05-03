@@ -5,9 +5,7 @@ import Outil.MathLocal;
 import moteur.scene.Entite;
 import org.joml.Vector2f;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 import static java.lang.Math.*;
 
@@ -15,42 +13,93 @@ import static java.lang.Math.*;
 public class Voiture extends Entite {
 
     //tous les déplacement des voitures se feront en 2D
-    float vitesse;
-    float acceleration;
+    private float vitesse;
+    private float acceleration;
 
-    int masse;
+    private int masse;
 
-    Vector2f pointAAller;
+    private Vector2f pointAAller;
 
-    Vector2f positionLocale;
+    private Vector2f positionLocale;
 
-    int indexRoute;
+    private int indexRoute;
 
-    float angle;
+    private float angle;
 
-    Route routeActuelle;
+    private Route routeActuelle;
 
-    Route prochaineRoute;
+    private Route prochaineRoute;
 
-    int sens;
+    private Maison maisonAAller;
+
+    private Maison maisonDepart;
+
+    private float distanceEntrePoint;
+
+    private int sens;
+
+    Stack<Route> chemin;
+
+    SystemeRoutier gps;
 
 
     /**
-     * @param id id de l'entite de la voiture
-     * @param idModel id du model de la voiture
-     * @param routeActuelle route de depart de la voiture
-     * @param sens sens dans laquelle il roule
+     *
+     * @param id id de l'entite
+     * @param idModel id du model
+     * @param maisonDepart maison de depart de la voiture
+     * @param maisonAAller maison d'arrivé de la voiture
+     * @param gps reference au systeme routier
      */
-    public Voiture(String id, String idModel, Route routeActuelle,int sens) {
+    public Voiture(String id, String idModel,Maison maisonDepart, Maison maisonAAller, SystemeRoutier gps) {
         super(id, idModel);
+
+        //définir la vitesse de base et l'accélération
         vitesse = 2;
-        this.sens = sens;
         acceleration = 0;
+        distanceEntrePoint = 0;
+
+        //plus tard
         indexRoute = 0;
+
+        //masse de la voiture
         masse = 3500;
-        this.routeActuelle = routeActuelle;
-        pointAAller = routeActuelle.getPointsRoute().get(2);
+
+        //définir la maison de depart et celle où aller
+        this.maisonDepart = maisonDepart;
+        this.maisonAAller = maisonAAller;
+
+        //définir le chemin à parcourir
+        chemin = gps.getChemin(maisonDepart,maisonAAller);
+
+        //mettre la route actuelle
+        try {
+            routeActuelle = chemin.pop();
+            prochaineRoute = chemin.pop();
+        } catch (EmptyStackException e) {
+            routeActuelle = maisonDepart.getRouteReliee();
+        }
+        //définir le sens initiale que la voiture va
+        this.sens = this.maisonDepart.getSensRouteLiee();
+
+
+
+
+        //mettre le point à aller initiale
+        if (sens == -1) {
+            pointAAller = routeActuelle.getPointsRouteInv().get(2);
+            setPosition(routeActuelle.getPointsRouteInv().get(0).x,0.012f,routeActuelle.getPointsRouteInv().get(0).y);
+        }
+
+        else {
+            pointAAller = routeActuelle.getPointsRoute().get(2);
+            setPosition(routeActuelle.getPointsRoute().get(0).x,0.012f,routeActuelle.getPointsRoute().get(0).y);
+        }
+
+
+        //mettre la position initiale de la voiture
         positionLocale = new Vector2f(getPosition().x, getPosition().z);
+        //mettre l'angle
         angle = getAjustementAngle();
         setAngle(angle);
     }
@@ -78,8 +127,6 @@ public class Voiture extends Entite {
      * @return
      */
     public float getAjustementAngle() {
-        //System.out.println(CouleurConsole.BLEU.couleur + "a : " + angle + " a : " + max(min(angle-getAngle(),(float) Math.toRadians(10)),(float) Math.toRadians(-10)));
-
         float x = pointAAller.x - positionLocale.x;
         float y = pointAAller.y - positionLocale.y;
         float angle = (float) abs(atan(y/x));
@@ -89,7 +136,7 @@ public class Voiture extends Entite {
             angle = (float)(PI-angle);
         else if (x > 0 && y < 0)
             angle = (float)(2*PI-angle);
-        //System.out.println(CouleurConsole.BLEU.couleur + "x : " + x + "\ny : " + y + "\nangle : " + angle);
+
         return angle - this.angle;
     }
 
@@ -135,28 +182,27 @@ public class Voiture extends Entite {
         vitesse += acceleration*temps;
         //setPositionLocale(getPositionLocale().x + getProchainPoint(temps).x,getPositionLocale().y + getProchainPoint(temps).y);
         try {
-            //System.out.println(positionLocale.distance(pointAAller));
-            //si la voiture atteint le point
-            if (positionLocale.distance(pointAAller) < 0.1f) {
-                //on trouve un autre point par rapport à la vitesse
-                int i = 0;
-                while(routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller) + ++i).distance(getPositionLocale()) <= (vitesse/1000)) {
+            //faire avancer la voiture
+
+
+
+        } catch (Exception e) {
+
+            //réagir lorsqu'on doit passer par une intersection (lorsqu'on finit la route)
+            if (sens == -1) {
+                if (routeActuelle.getIntersectionDepart() == prochaineRoute.getIntersectionDepart()) {
+                    sens*=-1;
                 }
-                //System.out.println(CouleurConsole.JAUNE.couleur + routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller) + ++i).distance(getPositionLocale()) + CouleurConsole.RESET.couleur);
-                pointAAller = routeActuelle.getPointsRoute().get(routeActuelle.getPointsRoute().indexOf(pointAAller)+i);
-                setAngle(angle + getAjustementAngle());
-                //avec le limitateur
             }
             else {
-                //on bouge la voiture
-                //System.out.println(pointAAller);
-                setAngle(angle + getAjustementAngle());
-                //System.out.println(angle);
-                setPositionLocale(getPositionLocale().x + getProchainPoint(temps).x,getPositionLocale().y + getProchainPoint(temps).y);
+                if (routeActuelle.getIntersectionFin() == prochaineRoute.getIntersectionFin()) {
+                    sens*=-1;
+                }
             }
-        } catch (Exception e) {
-            //réagir lorsqu'on doit passer par une intersection
-            pointAAller = routeActuelle.getPointsRoute().get(0);
+            routeActuelle = prochaineRoute;
+            prochaineRoute = chemin.pop();
+
+
         }
     }
 
@@ -202,6 +248,14 @@ public class Voiture extends Entite {
 
     public Route getRouteActuelle() {
         return routeActuelle;
+    }
+
+    public static String genererNom() {
+        return "Voiture #" + System.currentTimeMillis();
+    }
+
+    public Maison getMaisonDepart() {
+        return maisonDepart;
     }
 
 }

@@ -1,6 +1,7 @@
 package moteur.Graphique;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 
@@ -50,6 +51,10 @@ public class UniformsMap {
 
     public void setUniform(String uniform, Vector4f vecteur) {
         glUniform4f(getLocationUniform(uniform),vecteur.x,vecteur.y,vecteur.z,vecteur.w);
+    }
+
+    public void setUniform(String uniformName, Vector2f vecteur) {
+        glUniform2f(getLocationUniform(uniformName), vecteur.x, vecteur.y);
     }
 
     public void setUniform(String uniform, int value) {

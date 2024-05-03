@@ -10,7 +10,7 @@ public interface ILogiqueJeu {
 
     void detruireProgramme();
     void initialisation(Fenetre fenetre, Scene scene, Rendu rendu);
-    void entree(Fenetre fenetre, Scene scene, long diffTempsMillis);
+    void entree(Fenetre fenetre, Scene scene, long diffTempsMillis,boolean entreeUtilise);
     void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis);
 
 

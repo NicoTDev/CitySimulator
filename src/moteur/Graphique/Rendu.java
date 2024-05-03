@@ -14,16 +14,20 @@ public class Rendu {
 
     RenduScene renduScene;
 
+    RenduGui renduGui;
+
     public Rendu(Fenetre fenetre) {
         GL.createCapabilities();
         glEnable(GL_DEPTH_TEST);
         //glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         renduScene = new RenduScene();
+        renduGui = new RenduGui(fenetre);
 
     }
     public void detruireProgramme() {
         renduScene.detruireProgramme();
+        renduGui.detruireProgramme();
         //
     }
     public void rendre(Fenetre fenetre, Scene scene) {
@@ -31,8 +35,11 @@ public class Rendu {
         glViewport(0,0,fenetre.getLargeur(),fenetre.getHauteur());
 
         renduScene.rendre(scene);
+        renduGui.rendre(scene);
 
     }
 
-    public void resize(int largeur, int hauteur) {}
+    public void redimensionner(int largeur, int hauteur) {
+        renduGui.redimensionner(largeur,hauteur);
+    }
 }

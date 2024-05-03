@@ -1,5 +1,7 @@
 package jeu;
 
+import Outil.CouleurConsole;
+
 import java.util.*;
 
 public class Graph {
@@ -14,7 +16,6 @@ public class Graph {
         this.systemeRoutier = systemeRoutier;
         itemsAdjoints = new HashMap<>();
         ajouterItem(intersectionDepart);
-
 
     }
     public void ajouterItem(Intersection nouvelleIntersection) {
@@ -47,6 +48,74 @@ public class Graph {
         for (Intersection intersection : intersectionsAdjointes.keySet())
             if (!itemsAdjoints.containsKey(intersection))
                 ajouterItem(intersection);
+
+    }
+
+
+    public Stack<Intersection> getCheminIntersection(Intersection intersectionDepart, Intersection intersectionArrivee) {
+        Stack<Intersection> cheminIntersection = new Stack<>();
+        HashMap<Intersection, Float> intersectionNonObserve = new HashMap<>();
+        HashMap<Intersection, Float> intersectionObserve = new HashMap<>();
+
+        System.out.println(CouleurConsole.JAUNE.couleur + intersectionDepart + CouleurConsole.RESET.couleur);
+        System.out.println(CouleurConsole.JAUNE.couleur + intersectionArrivee + CouleurConsole.RESET.couleur);
+
+        //créer le tableau avec les valeurs
+        for (Intersection intersection : itemsAdjoints.keySet()) {
+            intersectionNonObserve.put(intersection, Float.POSITIVE_INFINITY);
+        }
+        //mettre la valeur de 0 à l'intersection de base
+        intersectionNonObserve.put(intersectionDepart,0F);
+
+        //tant que tous les sommets n'ont pas été observés
+        while (!intersectionNonObserve.isEmpty() && !intersectionObserve.containsKey(intersectionArrivee)) {
+
+            //on choisit le sommet le plus proche
+            Intersection intersectionARegarder = getIntersectionLaPlusProche(intersectionNonObserve);
+
+            //on l'ajoute à la liste des sommets observés et on l'enleve de celle des sommets non observés
+            intersectionObserve.put(intersectionARegarder,intersectionNonObserve.get(intersectionARegarder));
+            cheminIntersection.push(intersectionARegarder);
+            intersectionNonObserve.remove(intersectionARegarder);
+
+            //pour tous les sommets collés à lui.
+            for (Intersection intersection : itemsAdjoints.get(intersectionARegarder).keySet()) {
+                //on regarde d'abord si on l'a analyser, car on ne revient pas
+                if (intersectionNonObserve.containsKey(intersection)) {
+                    //sinon, on met la bonne valeur
+                    intersectionNonObserve.put(intersection,
+                            Math.min(intersectionNonObserve.get(intersection),
+                                    intersectionObserve.get(
+                                            intersectionARegarder)+itemsAdjoints.get(intersectionARegarder).get(intersection).getLongueur()));
+                }
+            }
+
+
+
+        }
+        System.out.println(CouleurConsole.BLEU.couleur + cheminIntersection + CouleurConsole.RESET.couleur);
+
+
+
+
+
+
+
+
+        return cheminIntersection;
+    }
+
+    public Intersection getIntersectionLaPlusProche(HashMap<Intersection, Float> intersections) {
+        //mettre la premiere intersections
+        Intersection intersectionLaPlusProche = (Intersection) intersections.keySet().toArray()[0];
+        System.out.println(intersectionLaPlusProche);
+        for (Intersection intersection : intersections.keySet()) {
+            if (intersections.get(intersection) < intersections.get(intersectionLaPlusProche)) {
+                intersectionLaPlusProche = intersection;
+            }
+        }
+
+        return intersectionLaPlusProche;
 
     }
 }

@@ -1,5 +1,7 @@
-import Outil.CouleurConsole;
 import Outil.MathLocal;
+import imgui.ImGui;
+import imgui.ImGuiIO;
+import imgui.flag.*;
 import jeu.*;
 import moteur.Graphique.Terrain;
 import moteur.*;
@@ -9,29 +11,24 @@ import moteur.scene.Entite;
 import moteur.scene.Scene;
 import org.joml.*;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.stb.STBIWriteCallbackI;
-
-import java.lang.System.*;
-
 import java.lang.Math;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.EmptyStackException;
 import java.util.List;
+
 
 /**
  * Classe Main à lancer au démarrage
  */
-public class Main implements ILogiqueJeu {
-
+public class Main implements ILogiqueJeu, ILogiqueGui {
 
     private static final float VITESSE = 0.025f;
 
     private static final float SENSIBILITE = 0.05f;
 
-    private List<Voiture> voitures;
-
     public Mode modeUtilisateur;
+
+    boolean isEnCours;
 
     boolean isRouteEnCours;
 
@@ -39,7 +36,11 @@ public class Main implements ILogiqueJeu {
 
     Terrain terrain;
 
+    Gui gui;
+
     Entite skyBox;
+
+    Scene scene;
 
     long tempsActuel = System.currentTimeMillis();
 
@@ -47,13 +48,16 @@ public class Main implements ILogiqueJeu {
 
 
     public static void main(String args[]) {
+
         Main main = new Main();
         Moteur moteur = new Moteur("Jeu", new Fenetre.optionFenetre(), main);
         moteur.start();
+
     }
 
     @Override
     public void detruireProgramme() {
+
 
 
     }
@@ -68,11 +72,13 @@ public class Main implements ILogiqueJeu {
     @Override
     public void initialisation(Fenetre fenetre, Scene scene, Rendu rendu) {
 
+        this.scene = scene;
 
+        isEnCours = false;
         //créer la skybox
         Model skyboxModel = ModelLoader.loadModel("skybox-model","ressources/models/skybox/skybox.obj",scene.getTextureCache());
         skyBox = new Entite("skybox-entite",skyboxModel.getId());
-        skyBox.setTaille(500);
+        skyBox.setTaille(200);
         skyBox.setPosition(0,-50,0);
         scene.ajouterModel(skyboxModel);
         scene.ajouterEntite(skyBox);
@@ -82,9 +88,9 @@ public class Main implements ILogiqueJeu {
         isRouteEnCours = false;
 
         //importer les models dans le jeu
-        Model arretModel = ModelLoader.loadModel("arret-model","ressources/models/arret/Arret.obj",scene.getTextureCache());
+        Model arretModel = ModelLoader.loadModel("arret-model",Arret.CHEMINOBJET,scene.getTextureCache());
         scene.ajouterModel(arretModel);
-        Model lumiereModel = ModelLoader.loadModel("lumiere-model","ressources/models/lumiere/lumiere.obj",scene.getTextureCache());
+        Model lumiereModel = ModelLoader.loadModel("lumiere-model",Lumiere.CHEMINOBJET,scene.getTextureCache());
         scene.ajouterModel(lumiereModel);
 
 
@@ -102,11 +108,8 @@ public class Main implements ILogiqueJeu {
         Entite terrainEntite = new Entite("entite-terrain", terrainModel.getId());
         scene.ajouterEntite(terrainEntite);
 
-        Model cubeModel = ModelLoader.loadModel("cube-model","ressources/models/arret/Arret.obj",scene.getTextureCache());
+        Model cubeModel = ModelLoader.loadModel("arret-model","ressources/models/arret/Arret.obj",scene.getTextureCache());
         scene.ajouterModel(cubeModel);
-
-        //creer la liste des voitures du jeu
-        voitures = new ArrayList<>();
 
         //pour le moment, la carte est créé à partir de cube, cela va changer plus tard
         final int TAILLECARTE = 30;
@@ -117,23 +120,43 @@ public class Main implements ILogiqueJeu {
         scene.ajouterModel(modelVoiture);
         //créer la voiture
 
-
-        //fausse rue
-        Route route = new Route(new Vector2f(0,0),scene);
-        route.ajouterSegment(new Vector2f(10,0),scene);
-        route.ajouterSegment(new Vector2f(10,10),scene);
-        route.ajouterSegment(new Vector2f(-10,-10),scene);
+        //importer le cube
+        Model modelCube = ModelLoader.loadModel("cube-model","ressources/models/cube/cube.obj", scene.getTextureCache());
+        scene.ajouterModel(modelCube);
 
 
 
-        Voiture voiture = new Voiture("voiture-entite", modelVoiture.getId(),route,1);
-        System.out.println(voiture.getPointRoute());
-        System.out.println(voiture.getPointRouteInverse());
-        scene.ajouterVoiture(voiture);
-        voiture.setTaille(0.5f);
-        voitures.add(voiture);
+        Model maisonModel = ModelLoader.loadModel("maison-model","ressources/models/maison/maison.obj",scene.getTextureCache());
+        scene.ajouterModel(maisonModel);
+
+
+        //générer des maison au depart
+        for (int i = 0 ; i < 3 ; i++) {
+            Maison maisonLocal = new Maison("maison-"+i,maisonModel.getId(),(float)Math.toRadians((float)(Math.random()*360)),scene);
+            boolean positionCorrect;
+            int precision = 0;
+            do {
+                positionCorrect = true;
+                maisonLocal.setPosition((float) (Math.random() * 60 - 30), 0.012f, (float) (Math.random() * 60 - 30));
+                for (Maison maison : scene.getMaisons()) {
+
+                    if (Math.abs(maison.getPosition().distance(maisonLocal.getPosition())) < 15  - (precision/100)) {
+                        positionCorrect = false;
+                        precision++;
+                    }
+                }
+            } while (!positionCorrect);
+            scene.ajouterMaison(maisonLocal);
+        }
+
         scene.getCamera().monter(5);
         scene.getCamera().reculer(20);
+
+        gui = new Gui(scene,systemeRoutier);
+
+        scene.setGuiLogique(this);
+
+
     }
 
     /**
@@ -142,9 +165,16 @@ public class Main implements ILogiqueJeu {
      * @param fenetre
      * @param scene
      * @param diffTempsMillis
+     * @param entreUtilise
      */
     @Override
-    public void entree(Fenetre fenetre, Scene scene, long diffTempsMillis) {
+    public void entree(Fenetre fenetre, Scene scene, long diffTempsMillis, boolean entreUtilise) {
+
+        //si ImGui a déjà utilisé cette entrée, ne rien faire.
+        if (entreUtilise) {
+            return;
+        }
+
         float mouvement = diffTempsMillis * VITESSE;
         Camera camera = scene.getCamera();
 
@@ -172,12 +202,6 @@ public class Main implements ILogiqueJeu {
             systemeRoutier.setModeUtilisateur(Mode.CUSTOMIZERINTERSECTION);
         if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_0))
             systemeRoutier.setModeUtilisateur(Mode.SPECTATEUR);
-        if (fenetre.isToucheAppuye(GLFW.GLFW_KEY_1) && System.currentTimeMillis() > tempsActuel + 500) {
-            tempsActuel = System.currentTimeMillis();
-            Graph graph = new Graph(voitures.get(0).getRouteActuelle().getIntersectionFin(),systemeRoutier);
-            System.out.println(graph.itemsAdjoints);
-            //System.out.println(systemeRoutier);
-        }
 
 
         camera.getPosition().set(new Vector3f(MathLocal.clamp(camera.getPosition().x,-terrain.getLargeur()/2.0f,terrain.getLargeur()/2.0f),
@@ -210,23 +234,63 @@ public class Main implements ILogiqueJeu {
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
 
 
-        skyBox.setPosition(scene.getCamera().getPosition().x+50,scene.getCamera().getPosition().y-50,scene.getCamera().getPosition().z+50);
-        //chaque rafraichissement de l'écran se fait à un temps différent tout dépendant la capacité de l'ordinateur
-        //mettre un multiplicateur de temps au items du monde pour qu'ils soient constants
-        double multiplicateur;
-        //prendre le temps actuel
-        double deltaActuel = System.currentTimeMillis();
-        //trouver le temps écoulé
-        double diffDelta = deltaActuel-deltaPrecedent;
-        //mettre la valeur du delta actuel au précedent
-        deltaPrecedent = deltaActuel;
+        //si la simulation est lancé, on exécute la boucle de jeu.
+        if (isEnCours) {
 
-        //System.out.println( (int) (1000/diffDelta) + " fps");
-        for (Voiture voiture : voitures) {
-            if (diffDelta/1000 < 1)
-                voiture.mettreAJourVoiture(diffDelta/1000);
+            //game loop
+            double multiplicateur;
+            //prendre le temps actuel
+            double deltaActuel = System.currentTimeMillis();
+            //trouver le temps écoulé
+            double diffDelta = deltaActuel - deltaPrecedent;
+
+            //mettre la valeur du delta actuel au précedent
+            deltaPrecedent = deltaActuel;
+            for (Voiture voiture : scene.getVoitures()) {
+                if (diffDelta / 1000 < 1) {
+                    voiture.mettreAJourVoiture(diffDelta / 1000);
+                }
+            }
 
         }
+
+        //Sinon, on fait la boucle d'engine
+        else {
+            //engine loop
+        }
+    }
+
+    @Override
+    public void dessinerGui() {
+        gui.rendre();
+    }
+
+    @Override
+    public boolean getCommandeInput(Scene scene, Fenetre fenetre) {
+        ImGuiIO imGuiIO = ImGui.getIO();
+        EntreSouris entreSouris = fenetre.getEntreSouris();
+        Vector2f mousePos = entreSouris.getPositionActuelle();
+        imGuiIO.setMousePos(mousePos.x, mousePos.y);
+        imGuiIO.setMouseDown(0, entreSouris.isBoutonGauchePresse());
+        imGuiIO.setMouseDown(1, entreSouris.isBoutonDroitPresse());
+        return imGuiIO.getWantCaptureMouse() || imGuiIO.getWantCaptureKeyboard();
+    }
+
+    public void spawnVoiture() {
+        Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+        Maison maisonArrive;
+        do {
+            maisonArrive = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+        } while (maisonDepart == maisonArrive);
+
+
+        try {
+            Voiture voiture = new Voiture(Voiture.genererNom(), "voiture-model", maisonDepart, maisonArrive, systemeRoutier);
+            scene.ajouterVoiture(voiture);
+        } catch (NullPointerException e) {
+            System.err.println("Une maison n'est pas liée!!!!");
+        }
+
     }
 
 }

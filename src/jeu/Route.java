@@ -8,7 +8,9 @@ import org.joml.Math;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
+
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  *  Cet algorithme utilise les courbes de Bézier pour tracer les routes
@@ -104,7 +106,6 @@ public class Route {
 
         mettreAJourRoute(scene);
 
-        //System.out.println(pointsBezier);
 
     }
 
@@ -204,7 +205,6 @@ public class Route {
         ArrayList<Vector2f> points = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             points.add(pointsBezier.get(3*index+i));
-            //System.out.println(pointsBezier.get(i));
         }
         return points;
     }
@@ -283,7 +283,7 @@ public class Route {
 
     public Mesh genererRouteMesh(ArrayList<Vector2f> points, Scene scene) {
 
-        Vector2f[] verticles = new Vector2f[points.size() * 2];
+        Vector2f[] verticles = new Vector2f[(points.size() * 2)];
         Vector2f[] uvs = new Vector2f[ verticles.length ];
         int nombreTriangle = 2 * (pointsRoute.size()-1) + (intersectionFin != null ? 2 : 0);
         int[] tris = new int[nombreTriangle * 3];
@@ -304,7 +304,7 @@ public class Route {
 
             //mettre dans un vecteur direction de longueur 1
             frontal.normalize();
-            Vector2f vecteurPerp = new Vector2f(-frontal.y,frontal.x);
+            Vector2f vecteurPerp = new Vector2f(-frontal.y, frontal.x);
 
             verticles[vertIndex] = new Vector2f(points.get(i)).add(new Vector2f(vecteurPerp).mul(TAILLEROUTE).mul(0.5f));
             verticles[vertIndex+1] = new Vector2f(points.get(i)).sub(new Vector2f(vecteurPerp).mul(TAILLEROUTE).mul(0.5f));
@@ -315,11 +315,11 @@ public class Route {
             uvs[vertIndex] = new Vector2f(0, pourcentageCompletion);
             uvs[vertIndex + 1] = new Vector2f(1, pourcentageCompletion);
 
-            if (i < points.size() - 1 ) {
-                tris[triIndex] = vertIndex;
-                tris[triIndex+1] = vertIndex + 2;
-                tris[triIndex+2] = vertIndex + 1;
+            if (i < points.size() - 1) {
 
+                tris[triIndex] = vertIndex;
+                tris[triIndex+1] = (vertIndex + 2);
+                tris[triIndex+2] = vertIndex + 1;
                 tris[triIndex + 3] = vertIndex + 1;
                 tris[triIndex + 4] = vertIndex + 2;
                 tris[triIndex + 5] = vertIndex + 3;
@@ -332,12 +332,6 @@ public class Route {
         }
 
 
-        //System.out.println(tris[tris.length-1]);
-
-        //
-        if (intersectionFin != null) {
-
-        }
 
         //créer l'array de positions final
         float[] positions = new float[verticles.length*3];
@@ -421,6 +415,13 @@ public class Route {
     public ArrayList<Vector2f> getPointsRoute() {
         return pointsRoute;
     }
+
+    public ArrayList<Vector2f> getPointsRouteInv() {
+        ArrayList<Vector2f> pointInv = new ArrayList<>(pointsRoute);
+        Collections.reverse(pointInv);
+        return pointInv;
+    }
+
 
     public float getLongueur() {
         return getPointsRoute().size();

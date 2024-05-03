@@ -16,6 +16,8 @@ public class Intersection {
 
     private String nom;
 
+    private boolean isMaison;
+
     private Vector2f position;
 
     private Vector2f[] pointsIntersection;
@@ -45,6 +47,7 @@ public class Intersection {
         //initialiser les variables
         routesLiee = new Route[4];
         this.scene = scene;
+        this.isMaison = false;
         this.id = genererNom();
         Vector2f direction;
         Vector3f position;
@@ -92,6 +95,14 @@ public class Intersection {
         //dev------------------------
 
         setLumiere();
+    }
+
+    public Intersection(Scene scene,Route routeLiee) {
+        this.routesLiee = new Route[1];
+        this.scene = scene;
+        isMaison = true;
+        routesLiee[0] = routeLiee;
+        this.id = genererNom().replaceAll("Intersection", "Maison");
     }
 
     /**
@@ -158,22 +169,22 @@ public class Intersection {
     }
 
     public void setLumiere() {
-        int rotationIncrement = 180;
+        int rotationIncrement = -90;
         for (Vector2f position : getPositionsSignalisation()) {
             Entite entite = new Entite("entite ("+position.x+","+position.y+")","lumiere-model");
             entite.setPosition(position.x,0.01f,position.y);
-            entite.setRotation(0,1,0,direction.angle(new Vector2f(-direction.y,direction.x)) + (float) Math.toRadians(rotationIncrement));
+            entite.setRotation(0,1,0,angle - (float) Math.toRadians(rotationIncrement));
             scene.ajouterEntite(entite);
             rotationIncrement += 90;
         }
     }
 
     public void setArret() {
-        int rotationIncrement = 180;
+        int rotationIncrement = -90;
         for (Vector2f position : getPositionsSignalisation()) {
             Entite entite = new Entite("entite ("+position.x+","+position.y+")","arret-model");
             entite.setPosition(position.x,0.01f,position.y);
-            entite.setRotation(0,1,0,direction.angle(new Vector2f(1,0)) - (float) Math.toRadians(rotationIncrement));
+            entite.setRotation(0,1,0,angle - (float) Math.toRadians(rotationIncrement));
             scene.ajouterEntite(entite);
             rotationIncrement += 90;
         }
@@ -196,5 +207,9 @@ public class Intersection {
 
     public String toString() {
         return this.id;
+    }
+
+    public boolean isMaison() {
+        return isMaison;
     }
 }
