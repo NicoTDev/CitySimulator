@@ -94,15 +94,15 @@ public class Intersection {
 
         //dev------------------------
 
-        setLumiere();
     }
 
-    public Intersection(Scene scene,Route routeLiee) {
+    public Intersection(int numero, Scene scene,Route routeLiee) {
         this.routesLiee = new Route[1];
         this.scene = scene;
         isMaison = true;
         routesLiee[0] = routeLiee;
         this.id = genererNom().replaceAll("Intersection", "Maison");
+        this.id = id.replaceAll("# [\\d]","# "+numero);
     }
 
     /**
@@ -151,6 +151,8 @@ public class Intersection {
     }
 
     public Vector2f[] getPointsIntersection() {
+        if (isMaison)
+            return new Vector2f[]{};
         return pointsIntersection;
     }
 
@@ -169,6 +171,8 @@ public class Intersection {
     }
 
     public void setLumiere() {
+        if (isMaison)
+            return;
         int rotationIncrement = -90;
         for (Vector2f position : getPositionsSignalisation()) {
             Entite entite = new Entite("entite ("+position.x+","+position.y+")","lumiere-model");
@@ -180,6 +184,8 @@ public class Intersection {
     }
 
     public void setArret() {
+        if (isMaison)
+            return;
         int rotationIncrement = -90;
         for (Vector2f position : getPositionsSignalisation()) {
             Entite entite = new Entite("entite ("+position.x+","+position.y+")","arret-model");
@@ -192,6 +198,8 @@ public class Intersection {
     }
 
     public Vector2f[] getPositionsSignalisation() {
+        if (isMaison)
+            return new Vector2f[]{};
         Vector2f directionPerp = new Vector2f(-direction.y,direction.x);
         return new Vector2f[]{
                 //Point central + (direction) * multiplicateur

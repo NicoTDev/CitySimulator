@@ -11,10 +11,13 @@ import moteur.scene.Entite;
 import moteur.scene.Scene;
 import org.joml.*;
 import org.lwjgl.glfw.GLFW;
+
+import javax.swing.text.MaskFormatter;
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -26,11 +29,7 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
     private static final float SENSIBILITE = 0.05f;
 
-    public Mode modeUtilisateur;
-
     boolean isEnCours;
-
-    boolean isRouteEnCours;
 
     SystemeRoutier systemeRoutier;
 
@@ -40,6 +39,7 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
     Entite skyBox;
 
+    Model modelVoiture;
     Scene scene;
 
     long tempsActuel = System.currentTimeMillis();
@@ -73,8 +73,6 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
     public void initialisation(Fenetre fenetre, Scene scene, Rendu rendu) {
 
         this.scene = scene;
-
-        isEnCours = false;
         //créer la skybox
         Model skyboxModel = ModelLoader.loadModel("skybox-model","ressources/models/skybox/skybox.obj",scene.getTextureCache());
         skyBox = new Entite("skybox-entite",skyboxModel.getId());
@@ -84,8 +82,6 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
         scene.ajouterEntite(skyBox);
 
         //mettre les modes par défaut
-        modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
-        isRouteEnCours = false;
 
         //importer les models dans le jeu
         Model arretModel = ModelLoader.loadModel("arret-model",Arret.CHEMINOBJET,scene.getTextureCache());
@@ -116,7 +112,7 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
 
         //tester le skin de voiture
-        Model modelVoiture = ModelLoader.loadModel("voiture-model", "ressources/models/camion/camion.obj", scene.getTextureCache());
+        modelVoiture = ModelLoader.loadModel("voiture-model", "ressources/models/camion/camion.obj", scene.getTextureCache());
         scene.ajouterModel(modelVoiture);
         //créer la voiture
 
@@ -131,8 +127,8 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
 
         //générer des maison au depart
-        for (int i = 0 ; i < 3 ; i++) {
-            Maison maisonLocal = new Maison("maison-"+i,maisonModel.getId(),(float)Math.toRadians((float)(Math.random()*360)),scene);
+        for (int i = 0 ; i < 4 ; i++) {
+            Maison maisonLocal = new Maison("maison-"+i,maisonModel.getId(),(float)Math.toRadians((float)(Math.random()*360)),scene,i+1);
             boolean positionCorrect;
             int precision = 0;
             do {
@@ -233,9 +229,19 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
     @Override
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
 
-
         //si la simulation est lancé, on exécute la boucle de jeu.
-        if (isEnCours) {
+        if (gui.isEnCours()) {
+
+            while (scene.getVoitures().size() < 5) {
+                Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+                Maison maisonArrive;
+                do {
+                    maisonArrive = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+                } while (maisonDepart == maisonArrive);
+                Voiture voiture = new Voiture(Voiture.genererNom(),"voiture-model",maisonDepart,maisonArrive,systemeRoutier);
+                scene.ajouterVoiture(voiture);
+
+            }
 
             //game loop
             double multiplicateur;
@@ -248,15 +254,22 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
             deltaPrecedent = deltaActuel;
             for (Voiture voiture : scene.getVoitures()) {
                 if (diffDelta / 1000 < 1) {
-                    voiture.mettreAJourVoiture(diffDelta / 1000);
+                    if(voiture.mettreAJourVoiture(diffDelta / 1000))
+                    {
+                        //scene.getVoitures().remove(voiture);
+                        modelVoiture.getEntites().remove(voiture);
+                    }
                 }
             }
 
+            //enlever les
+            scene.setVoitures((ArrayList<Voiture>) scene.getVoitures().stream().filter(n->!n.isDoitEtreDetruite()).collect(Collectors.toList()));
         }
 
         //Sinon, on fait la boucle d'engine
         else {
-            //engine loop
+            scene.setVoitures(new ArrayList<>());
+            modelVoiture.setEntites(new ArrayList<>());
         }
     }
 
@@ -273,25 +286,9 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
         imGuiIO.setMousePos(mousePos.x, mousePos.y);
         imGuiIO.setMouseDown(0, entreSouris.isBoutonGauchePresse());
         imGuiIO.setMouseDown(1, entreSouris.isBoutonDroitPresse());
-        return imGuiIO.getWantCaptureMouse() || imGuiIO.getWantCaptureKeyboard();
+        return (imGuiIO.getWantCaptureMouse() || imGuiIO.getWantCaptureKeyboard());
     }
 
-    public void spawnVoiture() {
-        Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
-        Maison maisonArrive;
-        do {
-            maisonArrive = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
-        } while (maisonDepart == maisonArrive);
-
-
-        try {
-            Voiture voiture = new Voiture(Voiture.genererNom(), "voiture-model", maisonDepart, maisonArrive, systemeRoutier);
-            scene.ajouterVoiture(voiture);
-        } catch (NullPointerException e) {
-            System.err.println("Une maison n'est pas liée!!!!");
-        }
-
-    }
 
 }
 

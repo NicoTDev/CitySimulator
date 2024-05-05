@@ -33,6 +33,10 @@ public class Model {
 
     public String getId() {return id;}
 
+    public void setEntites(ArrayList<Entite> entites)  {
+        this.entites = entites;
+    }
+
 
 
 

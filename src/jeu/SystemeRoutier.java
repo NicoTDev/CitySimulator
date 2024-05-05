@@ -38,8 +38,8 @@ public class SystemeRoutier {
         this.scene = scene;
         this.fenetre = fenetre;
         routeEnConstruction = null;
-
         modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
+
 
 
     }
@@ -49,6 +49,8 @@ public class SystemeRoutier {
      * @param entreSouris touche appuyée
      */
     public void interagir(EntreSouris entreSouris) {
+
+
         switch (modeUtilisateur) {
             case CONSTRUCTEURDEROUTE -> {
                 placerPointRoute(entreSouris.getPositionActuelle());
@@ -170,7 +172,9 @@ public class SystemeRoutier {
                         if (routeEnConstruction == null) {
                             Route nouvelleRoute = new Route(new Vector2f(maison.getPosition().x, maison.getPosition().z), scene);
                             routeEnConstruction = nouvelleRoute;
-                            routeEnConstruction.setIntersectionDepart(new Intersection(scene, routeEnConstruction));
+                            Intersection nouvelleIntersection = new Intersection(maison.getNumero(),scene, routeEnConstruction);
+                            scene.ajouterIntersection(nouvelleIntersection);
+                            routeEnConstruction.setIntersectionDepart(nouvelleIntersection);
                             maison.setRouteReliee(nouvelleRoute);
                             nouvelleRoute.ajouterSegment(new Vector2f(maison.getPointDevantMaison().x, maison.getPointDevantMaison().y), scene);
                             scene.ajouterRoute(nouvelleRoute);
@@ -181,7 +185,9 @@ public class SystemeRoutier {
                             maison.setRouteReliee(routeEnConstruction);
                             routeEnConstruction.ajouterSegment(new Vector2f(maison.getPointDevantMaison().x, maison.getPointDevantMaison().y), scene);
                             routeEnConstruction.ajouterSegment(new Vector2f(maison.getPosition().x, maison.getPosition().z), scene);
-                            routeEnConstruction.setIntersectionFin(new Intersection(scene, routeEnConstruction));
+                            Intersection nouvelleIntersection = new Intersection(maison.getNumero(),scene, routeEnConstruction);
+                            scene.ajouterIntersection(nouvelleIntersection);
+                            routeEnConstruction.setIntersectionFin(nouvelleIntersection);
                             routeEnConstruction = null;
 
                     }
@@ -267,13 +273,17 @@ public class SystemeRoutier {
      * sert à trouver un chemin pour passer de la route de départ à la route finale
      * @return arrayList qui indique le chemin
      */
-        public Stack<Route> getChemin(Maison maisonDepart, Maison maisonArrive) {
+        public ArrayList<Route> getChemin(Maison maisonDepart, Maison maisonArrive) {
         Graph graph = new Graph(maisonDepart.getIntersectionMaison(),this);
-        Stack<Intersection> chemin = graph.getCheminIntersection(maisonDepart.getIntersectionMaison(),maisonArrive.getIntersectionMaison());
-        Stack<Route> cheminRoute = new Stack<>();
+        Stack<Intersection> chemin = graph.getCheminIntersection(maisonArrive.getIntersectionMaison());
+        ArrayList<Route> cheminRoute = new ArrayList<>();
+
+        while (chemin.peek() != maisonArrive.getIntersectionMaison()) {
+            cheminRoute.add(getRouteEntreIntersections(chemin.pop(),chemin.peek()));
+        }
 
         //partie de code à faire (Dijkstra)
-        System.out.println(chemin);
+        System.out.println(cheminRoute);
         return cheminRoute;
     }
 
@@ -284,15 +294,28 @@ public class SystemeRoutier {
      * @return la route qui relie les deux (null si aucune)
      */
     public Route getRouteEntreIntersections(Intersection intersectionA, Intersection intersectionB) {
+
+        ArrayList<Route> routeReliees = new ArrayList<>();
         for (Route routeA : intersectionA.getRoutesLiee()) {
 
             for (Route routeB : intersectionB.getRoutesLiee()) {
                 if (routeA == routeB && routeA != null)
-                    return routeA;
+                    routeReliees.add(routeA);
             }
         }
 
-        return null;
+        //si aucune route ne les relis, on return null
+        if (routeReliees.isEmpty())
+            return null;
+
+
+        //sinon on trouve la route la plus courte
+        Route routeLaPlusCourte = routeReliees.get(0);
+        for (Route route : routeReliees) {
+            if (route.getLongueur() < routeLaPlusCourte.getLongueur())
+                routeLaPlusCourte = route;
+        }
+        return routeLaPlusCourte;
     }
 
     //pour rouler, si l'intersection de fin est l'intersection de debut, on fait rien, si l'intersection de fin de la route actuelle de la voiture est l'intersection de fin de la seconde route aussi, on fait *-1 au sens
