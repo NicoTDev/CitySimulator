@@ -32,22 +32,13 @@ public class Gui {
 
 
     public void rendre() {
-        ImFontAtlas fonts = ImGui.getIO().getFonts();
-/*
-        // Chargez la police à partir du fichier
-        String fontPath = "Fonts.ttf"; // Remplacez ceci par le chemin de votre fichier de police
-        fonts.addFontFromFileTTF(fontPath, 16);
-
-
-        //créer la fenêtre de base
-
- */
         ImGui.getIO().setFontGlobalScale(2f);
         ImGui.newFrame();
         ImGui.setNextWindowSize(1920, 1080);
         ImGui.begin("testerr",
                 ImGuiWindowFlags.NoTitleBar+ImGuiWindowFlags.NoResize+ImGuiWindowFlags.NoBackground+ImGuiWindowFlags.NoMove);
         //créer tous les élements de la fenêtre ici
+
         //-------------------------
         switch(systemeRoutier.modeUtilisateur){
             case SPECTATEUR :
@@ -66,14 +57,11 @@ public class Gui {
                 boutonsPersonnaliserIntersections();
                 break;
         }
-
-
-
         //-------------------------
+
         ImGui.end();
         ImGui.render();
         ImGui.endFrame();
-
     }
     public void boutonsUniversels(){
         //Boutons universels
@@ -86,51 +74,20 @@ public class Gui {
         }
         ImGui.popStyleColor();
 
-        //Créations bouton utilisateur
         //Constructeur route
         ImGui.setCursorPos(0,10);
-        if(systemeRoutier.modeUtilisateur == Mode.CONSTRUCTEURDEROUTE)
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(0,255,0,1));
-        else
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(255,0,0,1));
-
-        if (ImGui.button("Constructeur de routes",430,70)) {
-            systemeRoutier.setModeUtilisateur(Mode.CONSTRUCTEURDEROUTE);
-        }
-        ImGui.popStyleColor();
+        chaqueBoutons(Mode.CONSTRUCTEURDEROUTE, "Constructeur de routes");
 
         //Placer intersection
         ImGui.setCursorPos(0,90);
-        if(systemeRoutier.modeUtilisateur == Mode.PLACEURINTERSECTION)
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(0,255,0,1));
-        else
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(255,0,0,1));
-
-        if (ImGui.button("Placeur d'intersections",430,70)) {
-            systemeRoutier.setModeUtilisateur(Mode.PLACEURINTERSECTION);
-        }
-        ImGui.popStyleColor();
+        chaqueBoutons(Mode.PLACEURINTERSECTION,"Placeur d'intersections");
 
         //Personaliser un intersection
         ImGui.setCursorPos(0,170);
-        if(systemeRoutier.modeUtilisateur == Mode.CUSTOMIZERINTERSECTION)
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(0,255,0,1));
-        else
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(255,0,0,1));
-
-        if (ImGui.button("Personnaliseur d'intersections",430,70)) {
-            systemeRoutier.setModeUtilisateur(Mode.CUSTOMIZERINTERSECTION);
-        }
-        ImGui.popStyleColor();
-
-
-
-
-
+        chaqueBoutons(Mode.CUSTOMIZERINTERSECTION,"Personnaliseur d'intersections");
     }
     public void boutonsSpectateur(long tempsDépart){
         //Arrêter la simulation
-
         ImGui.setCursorPos(770,10);
         ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(255,0,0,1));
         if (ImGui.button("Arrêter la simulation",320,50)) {
@@ -163,6 +120,12 @@ public class Gui {
         ImGui.text("Nombre de fois utilisée :");
 
         for(int i =0; i < scene.getRoutes().size();i++){
+            int rougeAbsolu = (510 * scene.getRoutes().values().stream().toList().get(i).getNombreUtilisation())
+                    / scene.getRoutes().values().stream().mapToInt(Route :: getNombreUtilisation).sum();
+            int rouge =Math.min(255,rougeAbsolu);
+
+            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(rouge, 255-(255-rouge) ,0, 1));
+
             ImGui.setCursorPos(40,80 + (i * 20));
             ImGui.text(scene.getRoutes().values().stream().toList().get(i).getNomAbrege());
             ImGui.setCursorPos(400,80 + (i * 20));
@@ -176,10 +139,8 @@ public class Gui {
         //Dire le temps que la simulation a commencé
         ImGui.setCursorPos(580, 100);
         ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(0, 0, 0, 1));
-        if(systemeRoutier.routeEnConstruction == null) {
+        if(systemeRoutier.routeEnConstruction == null)
             ImGui.textWrapped("Appuyez sur le terrain ou un objet pour démarrer une route");
-
-        }
         else
             ImGui.textWrapped("Route " + systemeRoutier.routeEnConstruction + " en construction");
 
@@ -215,6 +176,18 @@ public class Gui {
             selectedRadioIndex = 1;
         }
         // }
+        ImGui.popStyleColor();
+    }
+    //Optimisation de la fonction boutonsUniversels
+    public void chaqueBoutons(Mode mode,String nom){
+        if(systemeRoutier.modeUtilisateur == mode)
+            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(0,255,0,1));
+        else
+            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(255,0,0,1));
+
+        if (ImGui.button(nom,430,70)) {
+            systemeRoutier.setModeUtilisateur(mode);
+        }
         ImGui.popStyleColor();
     }
 

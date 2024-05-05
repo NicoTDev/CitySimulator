@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * Classe Main à lancer au démarrage
+ * Classe Main à lasncer au démarrage
  */
 public class Main implements ILogiqueJeu, ILogiqueGui {
 
