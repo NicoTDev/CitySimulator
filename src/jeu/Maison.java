@@ -12,13 +12,16 @@ public class Maison extends Entite {
     private float angle;
     private Route routeReliee;
 
+    private int numero;
+
     private Scene scene;
-    public Maison(String id, String idModel, float angle, Scene scene) {
+    public Maison(String id, String idModel, float angle, Scene scene,int numero) {
         super(id, idModel);
         this.angle = angle;
         this.setRotation(0,1,0,this.angle);
         this.scene = scene;
         routeReliee = null;
+        this.numero = numero;
 
     }
 
@@ -44,5 +47,9 @@ public class Maison extends Entite {
 
     public Intersection getIntersectionMaison() {
         return (getSensRouteLiee() == 1) ? routeReliee.getIntersectionDepart() : routeReliee.getIntersectionFin();
+    }
+
+    public int getNumero() {
+        return numero;
     }
 }

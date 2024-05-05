@@ -11,8 +11,11 @@ public class Graph {
 
     SystemeRoutier systemeRoutier;
 
+    Intersection intersectionDepart;
+
     public Graph(Intersection intersectionDepart, SystemeRoutier systemeRoutier) {
 
+        this.intersectionDepart = intersectionDepart;
         this.systemeRoutier = systemeRoutier;
         itemsAdjoints = new HashMap<>();
         ajouterItem(intersectionDepart);
@@ -52,10 +55,12 @@ public class Graph {
     }
 
 
-    public Stack<Intersection> getCheminIntersection(Intersection intersectionDepart, Intersection intersectionArrivee) {
+    public Stack<Intersection> getCheminIntersection(Intersection intersectionArrivee) {
         Stack<Intersection> cheminIntersection = new Stack<>();
         HashMap<Intersection, Float> intersectionNonObserve = new HashMap<>();
         HashMap<Intersection, Float> intersectionObserve = new HashMap<>();
+
+
 
         System.out.println(CouleurConsole.JAUNE.couleur + intersectionDepart + CouleurConsole.RESET.couleur);
         System.out.println(CouleurConsole.JAUNE.couleur + intersectionArrivee + CouleurConsole.RESET.couleur);
@@ -64,18 +69,22 @@ public class Graph {
         for (Intersection intersection : itemsAdjoints.keySet()) {
             intersectionNonObserve.put(intersection, Float.POSITIVE_INFINITY);
         }
+
+        if (!intersectionNonObserve.containsKey(intersectionArrivee))
+            throw new IllegalArgumentException("Les intersections ne sont pas liables!");
+
+
         //mettre la valeur de 0 à l'intersection de base
         intersectionNonObserve.put(intersectionDepart,0F);
 
         //tant que tous les sommets n'ont pas été observés
-        while (!intersectionNonObserve.isEmpty() && !intersectionObserve.containsKey(intersectionArrivee)) {
+        while (!intersectionNonObserve.isEmpty()) {
 
             //on choisit le sommet le plus proche
             Intersection intersectionARegarder = getIntersectionLaPlusProche(intersectionNonObserve);
 
             //on l'ajoute à la liste des sommets observés et on l'enleve de celle des sommets non observés
             intersectionObserve.put(intersectionARegarder,intersectionNonObserve.get(intersectionARegarder));
-            cheminIntersection.push(intersectionARegarder);
             intersectionNonObserve.remove(intersectionARegarder);
 
             //pour tous les sommets collés à lui.
@@ -93,11 +102,26 @@ public class Graph {
 
 
         }
+
+
+
+        //faire le chemin
+        cheminIntersection.push(intersectionArrivee);
+
+        //tant qu'on est pas revenu au début
+        while (cheminIntersection.peek() != intersectionDepart) {
+            //on trouve l'intersection la plus proche du debut lié à celle que l'on regarde
+            Intersection prochaineIntersectionAAregarder = (Intersection) itemsAdjoints.get(cheminIntersection.peek()).keySet().toArray()[0];
+            for (Intersection intersection : itemsAdjoints.get(cheminIntersection.peek()).keySet()) {
+                if (intersectionObserve.get(intersection) < intersectionObserve.get(prochaineIntersectionAAregarder))
+                    prochaineIntersectionAAregarder = intersection;
+            }
+            cheminIntersection.push(prochaineIntersectionAAregarder);
+
+        }
+
+
         System.out.println(CouleurConsole.BLEU.couleur + cheminIntersection + CouleurConsole.RESET.couleur);
-
-
-
-
 
 
 

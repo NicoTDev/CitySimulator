@@ -28,8 +28,6 @@ public class Voiture extends Entite {
 
     private Route routeActuelle;
 
-    private Route prochaineRoute;
-
     private Maison maisonAAller;
 
     private Maison maisonDepart;
@@ -38,9 +36,13 @@ public class Voiture extends Entite {
 
     private int sens;
 
-    Stack<Route> chemin;
+    ArrayList<Route> chemin;
 
     SystemeRoutier gps;
+
+    boolean doitEtreDetruite;
+
+    private ArrayList<Vector2f> pointsRoute;
 
 
     /**
@@ -73,32 +75,20 @@ public class Voiture extends Entite {
         chemin = gps.getChemin(maisonDepart,maisonAAller);
 
         //mettre la route actuelle
-        try {
-            routeActuelle = chemin.pop();
-            prochaineRoute = chemin.pop();
-        } catch (EmptyStackException e) {
-            routeActuelle = maisonDepart.getRouteReliee();
-        }
         //définir le sens initiale que la voiture va
+
+        routeActuelle = chemin.get(0);
+        chemin.remove(0);
+
         this.sens = this.maisonDepart.getSensRouteLiee();
-
-
-
-
-        //mettre le point à aller initiale
-        if (sens == -1) {
-            pointAAller = routeActuelle.getPointsRouteInv().get(2);
-            setPosition(routeActuelle.getPointsRouteInv().get(0).x,0.012f,routeActuelle.getPointsRouteInv().get(0).y);
-        }
-
-        else {
-            pointAAller = routeActuelle.getPointsRoute().get(2);
-            setPosition(routeActuelle.getPointsRoute().get(0).x,0.012f,routeActuelle.getPointsRoute().get(0).y);
-        }
-
-
+        System.out.println(sens);
         //mettre la position initiale de la voiture
+        setPosition(getPointRoute().get(0).x,0.01f,getPointRoute().get(0).y);
         positionLocale = new Vector2f(getPosition().x, getPosition().z);
+
+        //mettre le point à aller
+        pointAAller = getPointRoute().get(2);
+
         //mettre l'angle
         angle = getAjustementAngle();
         setAngle(angle);
@@ -137,7 +127,7 @@ public class Voiture extends Entite {
         else if (x > 0 && y < 0)
             angle = (float)(2*PI-angle);
 
-        return angle - this.angle;
+        return angle;
     }
 
     public Vector2f getProchainPoint(double multiplicateur) {
@@ -178,32 +168,29 @@ public class Voiture extends Entite {
         positionLocale.y = y;
     }
 
-    public void mettreAJourVoiture(double temps) {
+    public void setPointsRoute() {
+        pointsRoute = (sens == 1) ? routeActuelle.getPointsRoute() : routeActuelle.getPointsRouteInv();
+    }
+
+    public boolean mettreAJourVoiture(double temps) {
         vitesse += acceleration*temps;
         //setPositionLocale(getPositionLocale().x + getProchainPoint(temps).x,getPositionLocale().y + getProchainPoint(temps).y);
         try {
             //faire avancer la voiture
 
-
+            setAngle(getAjustementAngle());
+            setPositionLocale(pointAAller.x,pointAAller.y);
+            pointAAller = getPointRoute().get(getPointRoute().indexOf(pointAAller) + 1);
 
         } catch (Exception e) {
 
             //réagir lorsqu'on doit passer par une intersection (lorsqu'on finit la route)
-            if (sens == -1) {
-                if (routeActuelle.getIntersectionDepart() == prochaineRoute.getIntersectionDepart()) {
-                    sens*=-1;
-                }
-            }
-            else {
-                if (routeActuelle.getIntersectionFin() == prochaineRoute.getIntersectionFin()) {
-                    sens*=-1;
-                }
-            }
-            routeActuelle = prochaineRoute;
-            prochaineRoute = chemin.pop();
+            updateRouteActuelle();
 
 
         }
+
+        return doitEtreDetruite;
     }
 
     public Vector2f getPositionLocale() {
@@ -232,14 +219,36 @@ public class Voiture extends Entite {
     public void getVecteurDerapage() {}
 
 
+    public void updateRouteActuelle() {
+
+        //mettre le sens correctement
+        if (chemin.isEmpty()) {
+            //sens *= maisonAAller.getSensRouteLiee();
+            doitEtreDetruite = true;
+        }
+        else {
+            //trouvez le sens que la voiture aura
+            sens *= (chemin.get(0).getIntersectionDepart() == routeActuelle.getIntersectionFin() ||
+                    chemin.get(0).getIntersectionFin() == routeActuelle.getIntersectionDepart()) ? 1 : -1;
+            System.out.println(sens);
+            routeActuelle = chemin.get(0);
+            routeActuelle.augmenterNombreUtilisation();
+            chemin.remove(0);
+        }
+        //mettre la route actuelle
+    }
+
+
+
+
     public void setRouteActuelle(Route routeActuelle) {
         this.routeActuelle = routeActuelle;
-        pointAAller = routeActuelle.getPremierPoint();
     }
 
     public ArrayList<Vector2f> getPointRoute() {
-        return routeActuelle.getPointsRoute();
+        return (sens == 1) ? routeActuelle.getPointsRoute() : getPointRouteInverse();
     }
+
     public ArrayList<Vector2f> getPointRouteInverse() {
         ArrayList<Vector2f> arrayInverse = new ArrayList<>(routeActuelle.getPointsRoute());
         Collections.reverse(arrayInverse);
@@ -258,4 +267,7 @@ public class Voiture extends Entite {
         return maisonDepart;
     }
 
+    public boolean isDoitEtreDetruite() {
+        return doitEtreDetruite;
+    }
 }

@@ -63,11 +63,13 @@ public class Scene {
     }
 
     public void ajouterEntite(Entite entite) {
-        String idModel = entite.getIdModel();
-        Model model = dicoModel.get(idModel);
-        if (model == null)
-            throw new IllegalArgumentException(idModel + " introuvable");
-        model.getEntites().add(entite);
+        if (entite != null) {
+            String idModel = entite.getIdModel();
+            Model model = dicoModel.get(idModel);
+            if (model == null)
+                throw new IllegalArgumentException(idModel + " introuvable");
+            model.getEntites().add(entite);
+        }
 
         //tout depend de la nature de l'entite, on l'ajoute dans son groupe correspondant
     }
@@ -129,4 +131,8 @@ public class Scene {
     }
 
     public ArrayList<Voiture> getVoitures() { return voitures;}
+
+    public void setVoitures(ArrayList<Voiture> voitures) {
+        this.voitures = voitures;
+    }
 }

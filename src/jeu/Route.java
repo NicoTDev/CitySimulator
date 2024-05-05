@@ -21,6 +21,8 @@ public class Route {
     //coefficient de frottement de la route
     final float COEFFICIENT_FROTTEMENT = 10;
 
+    private int nombreUtilisation;
+
     float longueurCurveEstimee;
 
     //taille de la route (1 par défaut)
@@ -46,6 +48,8 @@ public class Route {
     private Material material;
     private ArrayList<Material> materials;
 
+    String nomAbrege;
+
     //Entite de la route
     private Entite routeEntite;
 
@@ -63,6 +67,7 @@ public class Route {
         nomRoute = genererNomRoute();
         pointsRoute = new ArrayList<>();
         pointsBezier = new ArrayList<>();
+        nombreUtilisation = 0;
 
         intersectionDepart = null;
         intersectionFin = null;
@@ -385,6 +390,9 @@ public class Route {
             nomRue.append(nomsFamille[(int) (Math.random() * nomsFamille.length)]);
         }
 
+
+        nomAbrege = nomRue.toString();
+
         //mettre un id unique pour être sur, minimiser les risques
         nomRue.append(" ( ID : #");
         nomRue.append(System.currentTimeMillis());
@@ -426,6 +434,19 @@ public class Route {
     public float getLongueur() {
         return getPointsRoute().size();
     }
+
+    public int getNombreUtilisation() {
+        return nombreUtilisation;
+    }
+
+    public void augmenterNombreUtilisation(){
+        ++nombreUtilisation;
+    }
+
+    public String getNomAbrege() {
+        return nomAbrege;
+    }
+
 
 
 
