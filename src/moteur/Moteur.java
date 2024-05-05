@@ -72,7 +72,7 @@ public class Moteur {
             if (targetFps <= 0 || deltaFps >= 1) {
                 fenetre.getEntreSouris().entree();
                 boolean entreeUtilise = logiqueGui != null && logiqueGui.getCommandeInput(scene, fenetre);
-                logiqueJeu.entree(fenetre, scene, present - tempsInitial, entreeUtilise);
+                logiqueJeu.entree(fenetre, scene, present - tempsInitial, false);
             }
 
             //gérer la mise à jour de la logique du jeu
