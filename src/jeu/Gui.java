@@ -10,12 +10,19 @@ import moteur.scene.Scene;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Gui {
 
     SystemeRoutier systemeRoutier;
+
+    String messageErreurActuel;
+
+    boolean isErrone;
+
+    long delai;
 
     boolean isEnCours;
 
@@ -28,6 +35,7 @@ public class Gui {
         this.systemeRoutier = systemeRoutier;
         this.scene = scene;
         tempsDépart = 0;
+        messageErreurActuel = "NaN";
     }
 
 
@@ -57,8 +65,10 @@ public class Gui {
                 boutonsPersonnaliserIntersections();
                 break;
         }
+        if (isErrone) {
+            afficherMessageErreur();
+        }
         //-------------------------
-
         ImGui.end();
         ImGui.render();
         ImGui.endFrame();
@@ -68,6 +78,7 @@ public class Gui {
         ImGui.setCursorPos(770,10);
         ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(0,255,0,1));
         if (ImGui.button("Débuter la simulation",320,50)) {
+            scene.getRoutes().values().forEach(Route::reinitialiserNombreUtilisation);
             isEnCours = true;
             tempsDépart = System.currentTimeMillis();
             systemeRoutier.setModeUtilisateur(Mode.SPECTATEUR);
@@ -119,30 +130,34 @@ public class Gui {
         ImGui.setCursorPos(400,40);
         ImGui.text("Nombre de fois utilisée :");
 
+        int nombreUtilisationTotal = scene.getRoutes().values().stream().mapToInt(Route :: getNombreUtilisation).sum()+1;
+
+
         for(int i =0; i < scene.getRoutes().size();i++){
-            int rougeAbsolu = (510 * scene.getRoutes().values().stream().toList().get(i).getNombreUtilisation())
-                    / scene.getRoutes().values().stream().mapToInt(Route :: getNombreUtilisation).sum();
-            int rouge =Math.min(255,rougeAbsolu);
+            int nombreUtilisation = scene.getRoutes().values().stream().sorted(Comparator.comparingInt(Route::getNombreUtilisation)).toList().reversed().get(i).getNombreUtilisation();
+            float rougeAbsolu = (510 * nombreUtilisation)
+                    / (nombreUtilisationTotal*0.5f);
+            float rouge = Math.min(255,rougeAbsolu);
 
-            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(rouge, 255-(255-rouge) ,0, 1));
 
-            ImGui.setCursorPos(40,80 + (i * 20));
-            ImGui.text(scene.getRoutes().values().stream().toList().get(i).getNomAbrege());
-            ImGui.setCursorPos(400,80 + (i * 20));
-            ImGui.text(String.valueOf(scene.getRoutes().values().stream().toList().get(i).getNombreUtilisation())); // Nbr de fois sur la route
+            ImGui.setCursorPos(40,80 + (i * 22));
+            ImGui.text(scene.getRoutes().values().stream().sorted(Comparator.comparingInt(Route::getNombreUtilisation)).toList().reversed().get(i).getNomAbrege());
+            ImGui.setCursorPos(600,80 + (i * 22));
+            ImGui.pushStyleColor(ImGuiCol.Text, (nombreUtilisation > 0)?ImGui.getColorU32(rouge/(float)255, ((255-rouge))/(float)255 ,0, 1):ImGui.getColorU32(0, 255,0, 1));
+            ImGui.text(String.valueOf(scene.getRoutes().values().stream().sorted(Comparator.comparingInt(Route::getNombreUtilisation)).toList().reversed().get(i).getNombreUtilisation())); // Nbr de fois sur la route
+            ImGui.popStyleColor();
         }
         ImGui.end();
     }
     public void boutonsConstructeurRoutes(){
         ImGui.getIO().setFontGlobalScale(1.5f);
-
         //Dire le temps que la simulation a commencé
         ImGui.setCursorPos(580, 100);
         ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(0, 0, 0, 1));
         if(systemeRoutier.routeEnConstruction == null)
             ImGui.textWrapped("Appuyez sur le terrain ou un objet pour démarrer une route");
         else
-            ImGui.textWrapped("Route " + systemeRoutier.routeEnConstruction + " en construction");
+            ImGui.textWrapped(systemeRoutier.routeEnConstruction.getNomAbrege() + " en construction");
 
         ImGui.popStyleColor();
     }
@@ -151,7 +166,7 @@ public class Gui {
         //Dire le temps que la simulation a commencé
         ImGui.setCursorPos(700, 100);
         ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(0, 0, 0, 1));
-        ImGui.textWrapped("Appuyez sur une fin d'une route");
+        ImGui.textWrapped("Appuyez sur une fin ou un début de route");
         ImGui.popStyleColor();
     }
     public void boutonsPersonnaliserIntersections() {
@@ -167,15 +182,47 @@ public class Gui {
         */
         // Afficher les boutons radio
 
-        ImGui.text("Choisir une option d'intersection:");
-        ImGui.setCursorPos(50, 800);
-        if (ImGui.radioButton("Lumières", selectedRadioIndex == 0)) {
-            selectedRadioIndex = 0;
+        if (systemeRoutier.intersectionSelectionne != null) {
+            ImGui.text("Choisissez une intersection à modifier");
+            ImGui.setCursorPos(50, 800);
+            if (systemeRoutier.getIntersectionSelectionne().getSignalisation() == null) {
+                selectedRadioIndex = 2;
+            }
+            else {
+                if (systemeRoutier.getIntersectionSelectionne().getSignalisation().getClass() == Arret.class)
+                    selectedRadioIndex = 1;
+                else if (systemeRoutier.getIntersectionSelectionne().getSignalisation().getClass() == Lumiere.class)
+                    selectedRadioIndex = 0;
+            }
+
+            if (ImGui.radioButton("Lumières", selectedRadioIndex == 0)) {
+                systemeRoutier.getIntersectionSelectionne().setSignalisation(new Lumiere());
+                selectedRadioIndex = 0;
+            }
+
+            if (ImGui.radioButton("Panneaux arrêts", selectedRadioIndex == 1)) {
+                systemeRoutier.getIntersectionSelectionne().setSignalisation(new Arret());
+                selectedRadioIndex = 1;
+            }
+
+            if (ImGui.radioButton("Rien", selectedRadioIndex == 2)) {
+                systemeRoutier.getIntersectionSelectionne().setSignalisation(null);
+                selectedRadioIndex = 2;
+            }
+            // }
         }
-        if (ImGui.radioButton("Panneaux arrêts", selectedRadioIndex == 1)) {
-            selectedRadioIndex = 1;
+        ImGui.popStyleColor();
+    }
+    //Optimisation de la fonction boutonsUniversels
+    public void chaqueBoutons(Mode mode,String nom){
+        if(systemeRoutier.modeUtilisateur == mode)
+            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(0,255,0,1));
+        else
+            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(255,0,0,1));
+
+        if (ImGui.button(nom,430,70)) {
+            systemeRoutier.setModeUtilisateur(mode);
         }
-        // }
         ImGui.popStyleColor();
     }
     //Optimisation de la fonction boutonsUniversels
@@ -192,7 +239,36 @@ public class Gui {
     }
 
 
+
     public boolean isEnCours() {
         return isEnCours;
+    }
+
+    public void setEnCours(boolean valeur) {
+        isEnCours = valeur;
+    }
+
+    public void afficherMessageErreur() {
+        if (delai == 0)
+            delai = System.currentTimeMillis();
+
+        if (System.currentTimeMillis()-delai > 2000) {
+            delai = 0;
+            isErrone = false;
+        }
+        else {
+            ImGui.setCursorPos(900-(messageErreurActuel.length()*5),150);
+            ImGui.pushStyleColor(ImGuiCol.Text,ImGui.getColorU32(1,0,0,1));
+            ImGui.text(messageErreurActuel);
+            ImGui.popStyleColor();
+
+        }
+
+
+    }
+
+    public void setMessageErreur(String messageErreurActuel) {
+        this.messageErreurActuel = messageErreurActuel;
+        isErrone = true;
     }
 }

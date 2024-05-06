@@ -23,6 +23,8 @@ public class SystemeRoutier {
 
     Mode modeUtilisateur;
 
+    public Intersection intersectionSelectionne;
+
     Scene scene;
 
     Fenetre fenetre;
@@ -37,6 +39,7 @@ public class SystemeRoutier {
         this.terrain = terrain;
         this.scene = scene;
         this.fenetre = fenetre;
+        this.intersectionSelectionne = null;
         routeEnConstruction = null;
         modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
 
@@ -59,6 +62,7 @@ public class SystemeRoutier {
                 placerIntersection(entreSouris.getPositionActuelle());
             }
             case CUSTOMIZERINTERSECTION -> {
+                selectionnerIntersection(fenetre,scene,entreSouris.getPositionActuelle());
             }
         }
     }
@@ -142,7 +146,7 @@ public class SystemeRoutier {
                                 intersection.ajouterRoute(routeEnConstruction,i);
                                 routeEnConstruction.setIntersectionFin(intersection);
                                 routeEnConstruction.ajouterSegment(new Vector2f(intersectionPoint.x,intersectionPoint.y), scene);
-                                routeEnConstruction = null;
+                                finirConstructionRoute();
                             }
                             //sinon, on demarre une route
                             else {
@@ -178,17 +182,18 @@ public class SystemeRoutier {
                             maison.setRouteReliee(nouvelleRoute);
                             nouvelleRoute.ajouterSegment(new Vector2f(maison.getPointDevantMaison().x, maison.getPointDevantMaison().y), scene);
                             scene.ajouterRoute(nouvelleRoute);
+
+
                         }
                         //s'il y avait déjà une route, on conclut la rue en la reliant à la maison
                         else {
-
                             maison.setRouteReliee(routeEnConstruction);
                             routeEnConstruction.ajouterSegment(new Vector2f(maison.getPointDevantMaison().x, maison.getPointDevantMaison().y), scene);
                             routeEnConstruction.ajouterSegment(new Vector2f(maison.getPosition().x, maison.getPosition().z), scene);
                             Intersection nouvelleIntersection = new Intersection(maison.getNumero(),scene, routeEnConstruction);
                             scene.ajouterIntersection(nouvelleIntersection);
                             routeEnConstruction.setIntersectionFin(nouvelleIntersection);
-                            routeEnConstruction = null;
+                            finirConstructionRoute();
 
                     }
                 }
@@ -235,9 +240,7 @@ public class SystemeRoutier {
                     directionSouris.z, premierPoint.x-1, 0, premierPoint.y-1,premierPoint.x+1,0.01f,premierPoint.y+1, t) && t.x < plusPetiteDistance
                     && route.getIntersectionDepart() == null) {
                 plusPetiteDistance = t.x;
-
                 Intersection intersection = new Intersection(scene,route,-1);
-
 
             }
 
@@ -251,12 +254,28 @@ public class SystemeRoutier {
 
             }
 
+            else {
+                System.out.println("Rien n'y fait...");
+            }
+
         }
     }
 
+
+
     public void selectionnerIntersection(Fenetre fenetre, Scene scene, Vector2f pos) {
+        Vector4f directionSouris = getDirectionSouris(pos);
+        Vector3f centre = scene.getCamera().getPosition();
+        Vector2f t = new Vector2f();
 
-
+        for (Intersection intersection : scene.getIntersections()) {
+            float plusPetiteDistance = Float.POSITIVE_INFINITY;
+            if (Intersectionf.intersectRayAab(centre.x, centre.y, centre.z, directionSouris.x, directionSouris.y,
+                    directionSouris.z, intersection.getPosition().x - 1, 0, intersection.getPosition().y - 1, intersection.getPosition().x + 1, 0.01f, intersection.getPosition().y + 1, t) && t.x < plusPetiteDistance) {
+                plusPetiteDistance = t.x;
+                intersectionSelectionne = intersection;
+            }
+        }
     }
 
     /**
@@ -264,7 +283,9 @@ public class SystemeRoutier {
      * @param modeUtilisateur
      */
     public void setModeUtilisateur(Mode modeUtilisateur) {
-        routeEnConstruction = null;
+        if (routeEnConstruction != null)
+            finirConstructionRoute();
+        intersectionSelectionne = null;
         this.modeUtilisateur = modeUtilisateur;
     }
 
@@ -273,7 +294,7 @@ public class SystemeRoutier {
      * sert à trouver un chemin pour passer de la route de départ à la route finale
      * @return arrayList qui indique le chemin
      */
-        public ArrayList<Route> getChemin(Maison maisonDepart, Maison maisonArrive) {
+    public ArrayList<Route> getChemin(Maison maisonDepart, Maison maisonArrive) {
         Graph graph = new Graph(maisonDepart.getIntersectionMaison(),this);
         Stack<Intersection> chemin = graph.getCheminIntersection(maisonArrive.getIntersectionMaison());
         ArrayList<Route> cheminRoute = new ArrayList<>();
@@ -282,8 +303,6 @@ public class SystemeRoutier {
             cheminRoute.add(getRouteEntreIntersections(chemin.pop(),chemin.peek()));
         }
 
-        //partie de code à faire (Dijkstra)
-        System.out.println(cheminRoute);
         return cheminRoute;
     }
 
@@ -316,6 +335,20 @@ public class SystemeRoutier {
                 routeLaPlusCourte = route;
         }
         return routeLaPlusCourte;
+    }
+
+    public void finirConstructionRoute() {
+        System.out.println(routeEnConstruction.getNombreSegments());
+        if (routeEnConstruction.getNombreSegments() == 1) {
+            scene.getRoutes().remove(routeEnConstruction.toString());
+            routeEnConstruction.getRouteModel().setEntites(new ArrayList<>());
+        }
+        routeEnConstruction = null;
+
+    }
+
+    public Intersection getIntersectionSelectionne() {
+        return intersectionSelectionne;
     }
 
     //pour rouler, si l'intersection de fin est l'intersection de debut, on fait rien, si l'intersection de fin de la route actuelle de la voiture est l'intersection de fin de la seconde route aussi, on fait *-1 au sens

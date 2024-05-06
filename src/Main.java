@@ -37,7 +37,12 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
     Gui gui;
 
+
+
+
     Entite skyBox;
+
+    Model modelIntersection;
 
     Model modelVoiture;
     Scene scene;
@@ -57,8 +62,6 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
     @Override
     public void detruireProgramme() {
-
-
 
     }
 
@@ -111,6 +114,7 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
         final int TAILLECARTE = 30;
 
 
+
         //tester le skin de voiture
         modelVoiture = ModelLoader.loadModel("voiture-model", "ressources/models/camion/camion.obj", scene.getTextureCache());
         scene.ajouterModel(modelVoiture);
@@ -127,7 +131,8 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
 
         //générer des maison au depart
-        for (int i = 0 ; i < 4 ; i++) {
+        //(int)(Math.random()*5+5)
+        for (int i = 0 ; i < (int)(Math.random()*5+6) ; i++) {
             Maison maisonLocal = new Maison("maison-"+i,maisonModel.getId(),(float)Math.toRadians((float)(Math.random()*360)),scene,i+1);
             boolean positionCorrect;
             int precision = 0;
@@ -228,19 +233,31 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
      */
     @Override
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
-
         //si la simulation est lancé, on exécute la boucle de jeu.
         if (gui.isEnCours()) {
 
-            while (scene.getVoitures().size() < 5) {
-                Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
-                Maison maisonArrive;
-                do {
-                    maisonArrive = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
-                } while (maisonDepart == maisonArrive);
-                Voiture voiture = new Voiture(Voiture.genererNom(),"voiture-model",maisonDepart,maisonArrive,systemeRoutier);
-                scene.ajouterVoiture(voiture);
-
+            try {
+                //ajouter des voitures
+                while (scene.getVoitures().size() < 6) {
+                    Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+                    Maison maisonArrive;
+                    do {
+                        maisonArrive = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+                    } while (maisonDepart == maisonArrive);
+                    Voiture voiture = new Voiture(Voiture.genererNom(), "voiture-model", maisonDepart, maisonArrive, systemeRoutier,scene);
+                    voiture.setTaille(0.5f);
+                    scene.ajouterVoiture(voiture);
+                }
+            }
+            catch (NullPointerException e) {
+                systemeRoutier.setModeUtilisateur(Mode.CONSTRUCTEURDEROUTE);
+                gui.setMessageErreur("Toutes les maisons ne sont pas liées!");
+                gui.setEnCours(false);
+            }
+            catch (IllegalArgumentException e) {
+                systemeRoutier.setModeUtilisateur(Mode.CONSTRUCTEURDEROUTE);
+                gui.setMessageErreur("Certaines maisons ne sont pas rejoignables");
+                gui.setEnCours(false);
             }
 
             //game loop
@@ -252,6 +269,8 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
             //mettre la valeur du delta actuel au précedent
             deltaPrecedent = deltaActuel;
+
+            //mettre à jour les voitures
             for (Voiture voiture : scene.getVoitures()) {
                 if (diffDelta / 1000 < 1) {
                     if(voiture.mettreAJourVoiture(diffDelta / 1000))
