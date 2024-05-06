@@ -58,8 +58,6 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
     @Override
     public void detruireProgramme() {
 
-
-
     }
 
     /**
@@ -127,7 +125,8 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
 
         //générer des maison au depart
-        for (int i = 0 ; i < 4 ; i++) {
+        //(int)(Math.random()*5+5)
+        for (int i = 0 ; i < 3 ; i++) {
             Maison maisonLocal = new Maison("maison-"+i,maisonModel.getId(),(float)Math.toRadians((float)(Math.random()*360)),scene,i+1);
             boolean positionCorrect;
             int precision = 0;
@@ -228,19 +227,30 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
      */
     @Override
     public void miseAJour(Fenetre fenetre, Scene scene, long diffTempsMillis) {
-
         //si la simulation est lancé, on exécute la boucle de jeu.
         if (gui.isEnCours()) {
 
-            while (scene.getVoitures().size() < 5) {
-                Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
-                Maison maisonArrive;
-                do {
-                    maisonArrive = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
-                } while (maisonDepart == maisonArrive);
-                Voiture voiture = new Voiture(Voiture.genererNom(),"voiture-model",maisonDepart,maisonArrive,systemeRoutier);
-                scene.ajouterVoiture(voiture);
-
+            try {
+                while (scene.getVoitures().size() < 5) {
+                    Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+                    Maison maisonArrive;
+                    do {
+                        maisonArrive = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
+                    } while (maisonDepart == maisonArrive);
+                    Voiture voiture = new Voiture(Voiture.genererNom(), "voiture-model", maisonDepart, maisonArrive, systemeRoutier);
+                    voiture.setTaille(0.5f);
+                    scene.ajouterVoiture(voiture);
+                }
+            }
+            catch (NullPointerException e) {
+                systemeRoutier.setModeUtilisateur(Mode.CONSTRUCTEURDEROUTE);
+                gui.setMessageErreur("Toutes les maisons ne sont pas liées!");
+                gui.setEnCours(false);
+            }
+            catch (IllegalArgumentException e) {
+                systemeRoutier.setModeUtilisateur(Mode.CONSTRUCTEURDEROUTE);
+                gui.setMessageErreur("Certaines maisons ne sont pas rejoignables");
+                gui.setEnCours(false);
             }
 
             //game loop

@@ -38,11 +38,14 @@ public class Maison extends Entite {
     }
 
     public int getSensRouteLiee() {
-        if (routeReliee == null)
+        if (routeReliee == null) {
             throw new NullPointerException("La maison n'est liée à aucune route");
+        }
 
 
         return (routeReliee.getIntersectionDepart().isMaison()) ? 1 : -1;
+
+
     }
 
     public Intersection getIntersectionMaison() {

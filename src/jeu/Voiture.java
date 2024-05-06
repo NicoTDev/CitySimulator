@@ -5,6 +5,7 @@ import Outil.MathLocal;
 import moteur.scene.Entite;
 import org.joml.Vector2f;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.util.*;
 
 import static java.lang.Math.*;
@@ -19,6 +20,8 @@ public class Voiture extends Entite {
     private int masse;
 
     private Vector2f pointAAller;
+
+    private Vector2f pointBase;
 
     private Vector2f positionLocale;
 
@@ -38,7 +41,7 @@ public class Voiture extends Entite {
 
     ArrayList<Route> chemin;
 
-    SystemeRoutier gps;
+    private float vitesseMaximale;
 
     boolean doitEtreDetruite;
 
@@ -57,8 +60,9 @@ public class Voiture extends Entite {
         super(id, idModel);
 
         //définir la vitesse de base et l'accélération
-        vitesse = 2;
-        acceleration = 0;
+        vitesse = 0;
+        vitesseMaximale = 2;
+        acceleration = 0.5f;
         distanceEntrePoint = 0;
 
         //plus tard
@@ -78,16 +82,19 @@ public class Voiture extends Entite {
         //définir le sens initiale que la voiture va
 
         routeActuelle = chemin.get(0);
+        routeActuelle.augmenterNombreUtilisation();
         chemin.remove(0);
 
         this.sens = this.maisonDepart.getSensRouteLiee();
-        System.out.println(sens);
         //mettre la position initiale de la voiture
         setPosition(getPointRoute().get(0).x,0.01f,getPointRoute().get(0).y);
+
         positionLocale = new Vector2f(getPosition().x, getPosition().z);
 
         //mettre le point à aller
+        distanceEntrePoint = 0;
         pointAAller = getPointRoute().get(2);
+        pointBase = getPointRoute().get(0);
 
         //mettre l'angle
         angle = getAjustementAngle();
@@ -117,8 +124,8 @@ public class Voiture extends Entite {
      * @return
      */
     public float getAjustementAngle() {
-        float x = pointAAller.x - positionLocale.x;
-        float y = pointAAller.y - positionLocale.y;
+        float x = pointAAller.x - pointBase.x;
+        float y = pointAAller.y - pointBase.y;
         float angle = (float) abs(atan(y/x));
         if (x < 0 && y < 0)
             angle += PI;
@@ -127,7 +134,8 @@ public class Voiture extends Entite {
         else if (x > 0 && y < 0)
             angle = (float)(2*PI-angle);
 
-        return angle;
+        //System.out.println("Angle à gauche : " + angle + " | Angle à droite : " + ((PI*2-angle)));
+        return (angle);
     }
 
     public Vector2f getProchainPoint(double multiplicateur) {
@@ -163,6 +171,7 @@ public class Voiture extends Entite {
     }
 
     public void setPositionLocale(float x, float y) {
+
         setPosition(x,getPosition().y,y);
         positionLocale.x = x;
         positionLocale.y = y;
@@ -173,21 +182,38 @@ public class Voiture extends Entite {
     }
 
     public boolean mettreAJourVoiture(double temps) {
-        vitesse += acceleration*temps;
+        while (vitesse < vitesseMaximale)
+            vitesse = (float) Math.min(vitesseMaximale,vitesse + (acceleration*temps));
         //setPositionLocale(getPositionLocale().x + getProchainPoint(temps).x,getPositionLocale().y + getProchainPoint(temps).y);
-        try {
-            //faire avancer la voiture
+        Vector2f dir;
+        Vector2f vecteurSensRoute;
 
+        try {
+
+            //mettre à jour la voiture
+            while (new Vector2f(pointAAller).distance(pointBase) - distanceEntrePoint < 0.1f) {
+                distanceEntrePoint = 0;
+                pointBase = pointAAller;
+                pointAAller = getPointRoute().get(getPointRoute().indexOf(pointAAller) + 1);
+            }
+            //mettre à jour
+            dir = new Vector2f((new Vector2f(pointAAller).sub(pointBase))).normalize();
+            vecteurSensRoute = new Vector2f(-dir.y,dir.x).mul(0.25f);
+            //setPositionLocale(pointAAller.x+vecteurSensRoute.x, vpointAAller.y+vecteurSensRoute.y);
+            distanceEntrePoint += (float) (temps * vitesse);
+            Vector2f nouveauPt = new Vector2f(pointBase).add(new Vector2f((float) (distanceEntrePoint*cos(angle)), (float) (distanceEntrePoint*sin(angle)))).add(new Vector2f(vecteurSensRoute));
+
+            setPositionLocale(nouveauPt.x,nouveauPt.y);
             setAngle(getAjustementAngle());
-            setPositionLocale(pointAAller.x,pointAAller.y);
-            pointAAller = getPointRoute().get(getPointRoute().indexOf(pointAAller) + 1);
+            //réajuster le point à aller
 
         } catch (Exception e) {
 
+
+            pointBase = getPointRoute().get(getPointRoute().size()-1);
             //réagir lorsqu'on doit passer par une intersection (lorsqu'on finit la route)
             updateRouteActuelle();
-
-
+            pointAAller = getPointRoute().get(0);
         }
 
         return doitEtreDetruite;
@@ -198,22 +224,10 @@ public class Voiture extends Entite {
     }
 
 
-
-
     //DEV------------------------------
     public void setPointAAller(float x, float y) {
         pointAAller.x = x;
         pointAAller.y = y;
-    }
-
-    public void setAngleSpawn() {
-        int indexPointAAller = routeActuelle.getPointsRoute().indexOf(pointAAller);
-        ArrayList<Vector2f> pts = routeActuelle.getPointsRoute();
-        //trouvez le vecteur direction
-        Vector2f vecteurDirection = new Vector2f(pts.get(indexPointAAller+1)).sub(pointAAller).normalize();
-        float angle = new Vector2f(1,0).angle(vecteurDirection);
-        vecteurDirection.angle(new Vector2f().zero());
-        this.setAngle(angle);
     }
 
     public void getVecteurDerapage() {}
@@ -230,16 +244,12 @@ public class Voiture extends Entite {
             //trouvez le sens que la voiture aura
             sens *= (chemin.get(0).getIntersectionDepart() == routeActuelle.getIntersectionFin() ||
                     chemin.get(0).getIntersectionFin() == routeActuelle.getIntersectionDepart()) ? 1 : -1;
-            System.out.println(sens);
             routeActuelle = chemin.get(0);
-            routeActuelle.augmenterNombreUtilisation();
             chemin.remove(0);
+            routeActuelle.augmenterNombreUtilisation();
         }
         //mettre la route actuelle
     }
-
-
-
 
     public void setRouteActuelle(Route routeActuelle) {
         this.routeActuelle = routeActuelle;

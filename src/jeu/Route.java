@@ -369,6 +369,24 @@ public class Route {
 
         StringBuilder nomRue = new StringBuilder();
 
+        if (Math.random()*100 > 99 ) {
+            nomAbrege = "Rue Lolodrog ";
+            return "Rue Lolodrog ( ID : " + System.currentTimeMillis()+ " )";
+        }
+        if (Math.random()*100 > 99 ) {
+            nomAbrege = "Rue Alextraterrestre ";
+            return "Rue Alextraterrestre ( ID : " + System.currentTimeMillis()+ " )";
+        }
+        if (Math.random()*100 > 99 ) {
+            nomAbrege = "Route Forestière ";
+            return "Route Forestière ( ID : " + System.currentTimeMillis()+ " )";
+        }
+        if (Math.random()*100 > 99 ) {
+            nomAbrege = "Route Forestière ";
+            return "Route Forestière ( ID : " + System.currentTimeMillis()+ " )";
+        }
+
+
         nomRue.append("Rue ");
         //une chance sur 8 d'avoir un saint en avant
         if (Math.random() * 100 > 80)
@@ -447,7 +465,11 @@ public class Route {
         return nomAbrege;
     }
 
+    public void reinitialiserNombreUtilisation() {
+        nombreUtilisation = 0;
+    }
 
-
-
+    public Model getRouteModel() {
+        return routeModel;
+    }
 }

@@ -62,9 +62,6 @@ public class Graph {
 
 
 
-        System.out.println(CouleurConsole.JAUNE.couleur + intersectionDepart + CouleurConsole.RESET.couleur);
-        System.out.println(CouleurConsole.JAUNE.couleur + intersectionArrivee + CouleurConsole.RESET.couleur);
-
         //créer le tableau avec les valeurs
         for (Intersection intersection : itemsAdjoints.keySet()) {
             intersectionNonObserve.put(intersection, Float.POSITIVE_INFINITY);
@@ -121,10 +118,6 @@ public class Graph {
         }
 
 
-        System.out.println(CouleurConsole.BLEU.couleur + cheminIntersection + CouleurConsole.RESET.couleur);
-
-
-
 
         return cheminIntersection;
     }
@@ -132,7 +125,6 @@ public class Graph {
     public Intersection getIntersectionLaPlusProche(HashMap<Intersection, Float> intersections) {
         //mettre la premiere intersections
         Intersection intersectionLaPlusProche = (Intersection) intersections.keySet().toArray()[0];
-        System.out.println(intersectionLaPlusProche);
         for (Intersection intersection : intersections.keySet()) {
             if (intersections.get(intersection) < intersections.get(intersectionLaPlusProche)) {
                 intersectionLaPlusProche = intersection;
