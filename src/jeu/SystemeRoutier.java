@@ -23,6 +23,8 @@ public class SystemeRoutier {
 
     Mode modeUtilisateur;
 
+    public Intersection intersectionSelectionne;
+
     Scene scene;
 
     Fenetre fenetre;
@@ -37,6 +39,7 @@ public class SystemeRoutier {
         this.terrain = terrain;
         this.scene = scene;
         this.fenetre = fenetre;
+        this.intersectionSelectionne = null;
         routeEnConstruction = null;
         modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
 
@@ -59,6 +62,7 @@ public class SystemeRoutier {
                 placerIntersection(entreSouris.getPositionActuelle());
             }
             case CUSTOMIZERINTERSECTION -> {
+                selectionnerIntersection(fenetre,scene,entreSouris.getPositionActuelle());
             }
         }
     }
@@ -238,7 +242,6 @@ public class SystemeRoutier {
                 plusPetiteDistance = t.x;
                 Intersection intersection = new Intersection(scene,route,-1);
 
-
             }
 
             else if (Intersectionf.intersectRayAab(centre.x, centre.y, centre.z, directionSouris.x, directionSouris.y,
@@ -251,12 +254,28 @@ public class SystemeRoutier {
 
             }
 
+            else {
+                System.out.println("Rien n'y fait...");
+            }
+
         }
     }
 
+
+
     public void selectionnerIntersection(Fenetre fenetre, Scene scene, Vector2f pos) {
+        Vector4f directionSouris = getDirectionSouris(pos);
+        Vector3f centre = scene.getCamera().getPosition();
+        Vector2f t = new Vector2f();
 
-
+        for (Intersection intersection : scene.getIntersections()) {
+            float plusPetiteDistance = Float.POSITIVE_INFINITY;
+            if (Intersectionf.intersectRayAab(centre.x, centre.y, centre.z, directionSouris.x, directionSouris.y,
+                    directionSouris.z, intersection.getPosition().x - 1, 0, intersection.getPosition().y - 1, intersection.getPosition().x + 1, 0.01f, intersection.getPosition().y + 1, t) && t.x < plusPetiteDistance) {
+                plusPetiteDistance = t.x;
+                intersectionSelectionne = intersection;
+            }
+        }
     }
 
     /**
@@ -266,6 +285,7 @@ public class SystemeRoutier {
     public void setModeUtilisateur(Mode modeUtilisateur) {
         if (routeEnConstruction != null)
             finirConstructionRoute();
+        intersectionSelectionne = null;
         this.modeUtilisateur = modeUtilisateur;
     }
 
@@ -325,6 +345,10 @@ public class SystemeRoutier {
         }
         routeEnConstruction = null;
 
+    }
+
+    public Intersection getIntersectionSelectionne() {
+        return intersectionSelectionne;
     }
 
     //pour rouler, si l'intersection de fin est l'intersection de debut, on fait rien, si l'intersection de fin de la route actuelle de la voiture est l'intersection de fin de la seconde route aussi, on fait *-1 au sens

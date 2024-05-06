@@ -9,6 +9,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.lang.invoke.VolatileCallSite;
+import java.util.ArrayList;
 
 public class Intersection {
 
@@ -24,8 +25,6 @@ public class Intersection {
 
     private Vector2f direction;
 
-    private Model intersectionModel;
-
     private Entite intersectionEntite;
 
     private Scene scene;
@@ -35,6 +34,12 @@ public class Intersection {
     private float angle;
 
     private Signalisation signalisation;
+
+    private Model modelLumiere;
+
+    private Model modelArret;
+
+    Model modelIntersection;
 
     /**
      *
@@ -51,13 +56,13 @@ public class Intersection {
         this.id = genererNom();
         Vector2f direction;
         Vector3f position;
-        //créer le model de l'entite
-        intersectionModel = ModelLoader.loadModel("model-" + id,"ressources/models/intersection/intersection.obj",scene.getTextureCache());
-        scene.ajouterModel(intersectionModel);
+        loaderLesModels();
 
         //créer l'entite de l'intersection
-        intersectionEntite = new Entite("entite-"+id,intersectionModel.getId());
+        intersectionEntite = new Entite("entite-"+id,modelIntersection.getId());
         intersectionEntite.setTaille(1);
+
+        System.out.println("New Intersection");
 
         //ajouter à l'intersection la premiere route
         ajouterRoute(routeIni,0);
@@ -103,6 +108,12 @@ public class Intersection {
         routesLiee[0] = routeLiee;
         this.id = genererNom().replaceAll("Intersection", "Maison");
         this.id = id.replaceAll("# [\\d]","# "+numero);
+
+        //models
+        loaderLesModels();
+        intersectionEntite = new Entite("entite-"+id,modelIntersection.getId());
+        this.setPosition(-1000,0,0);
+        scene.ajouterIntersection(this);
     }
 
     /**
@@ -162,12 +173,18 @@ public class Intersection {
 
     public void setSignalisation(Signalisation signalisation) {
         this.signalisation = signalisation;
-        if (signalisation.getClass() == Arret.class) {
-            setArret();
+        modelArret.setEntites(new ArrayList<>());
+        modelLumiere.setEntites(new ArrayList<>());
+
+        if (signalisation != null) {
+            if (signalisation.getClass() == Arret.class) {
+                setArret();
+            } else if (signalisation.getClass() == Lumiere.class) {
+                setLumiere();
+            }
         }
-        else if (signalisation.getClass() == Lumiere.class) {
-            setLumiere();
-        }
+
+
     }
 
     public void setLumiere() {
@@ -175,7 +192,7 @@ public class Intersection {
             return;
         int rotationIncrement = -90;
         for (Vector2f position : getPositionsSignalisation()) {
-            Entite entite = new Entite("entite ("+position.x+","+position.y+")","lumiere-model");
+            Entite entite = new Entite("entite ("+position.x+","+position.y+")",modelLumiere.getId());
             entite.setPosition(position.x,0.01f,position.y);
             entite.setRotation(0,1,0,angle - (float) Math.toRadians(rotationIncrement));
             scene.ajouterEntite(entite);
@@ -188,7 +205,7 @@ public class Intersection {
             return;
         int rotationIncrement = -90;
         for (Vector2f position : getPositionsSignalisation()) {
-            Entite entite = new Entite("entite ("+position.x+","+position.y+")","arret-model");
+            Entite entite = new Entite("entite ("+position.x+","+position.y+")",modelArret.getId());
             entite.setPosition(position.x,0.01f,position.y);
             entite.setRotation(0,1,0,angle - (float) Math.toRadians(rotationIncrement));
             scene.ajouterEntite(entite);
@@ -211,7 +228,9 @@ public class Intersection {
         };
     }
 
-    public void getSignalisation() {}
+    public Signalisation getSignalisation()  {
+        return signalisation;
+    }
 
     public String toString() {
         return this.id;
@@ -219,5 +238,14 @@ public class Intersection {
 
     public boolean isMaison() {
         return isMaison;
+    }
+
+    public void loaderLesModels() {
+        modelIntersection = ModelLoader.loadModel("model-intersection"+id,"ressources/models/intersection/intersection.obj",scene.getTextureCache());
+        scene.ajouterModel(modelIntersection);
+        modelArret = ModelLoader.loadModel("model-arret"+id,"ressources/models/arret/Arret.obj",scene.getTextureCache());
+        scene.ajouterModel(modelArret);
+        modelLumiere = ModelLoader.loadModel("model-lumiere"+id,"ressources/models/lumiere/lumiere.obj",scene.getTextureCache());
+        scene.ajouterModel(modelLumiere);
     }
 }

@@ -134,4 +134,14 @@ public class Graph {
         return intersectionLaPlusProche;
 
     }
+
+    public static Intersection getIntersectionEntreRoutes(Route route1, Route route2) {
+        if (route1.getIntersectionDepart() == route2.getIntersectionDepart() || route1.getIntersectionDepart() == route2.getIntersectionFin())
+            return route1.getIntersectionDepart();
+        else if (route1.getIntersectionFin() == route2.getIntersectionDepart() || route1.getIntersectionFin() == route2.getIntersectionFin())
+            return route1.getIntersectionFin();
+        else
+            return null;
+    }
+
 }

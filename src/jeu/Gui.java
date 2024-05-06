@@ -184,15 +184,35 @@ public class Gui {
         */
         // Afficher les boutons radio
 
-        ImGui.text("Choisir une option d'intersection:");
-        ImGui.setCursorPos(50, 800);
-        if (ImGui.radioButton("Lumières", selectedRadioIndex == 0)) {
-            selectedRadioIndex = 0;
+        if (systemeRoutier.intersectionSelectionne != null) {
+            ImGui.text("Choisissez une intersection à modifier");
+            ImGui.setCursorPos(50, 800);
+            if (systemeRoutier.getIntersectionSelectionne().getSignalisation() == null) {
+                selectedRadioIndex = 2;
+            }
+            else {
+                if (systemeRoutier.getIntersectionSelectionne().getSignalisation().getClass() == Arret.class)
+                    selectedRadioIndex = 1;
+                else if (systemeRoutier.getIntersectionSelectionne().getSignalisation().getClass() == Lumiere.class)
+                    selectedRadioIndex = 0;
+            }
+
+            if (ImGui.radioButton("Lumières", selectedRadioIndex == 0)) {
+                systemeRoutier.getIntersectionSelectionne().setSignalisation(new Lumiere());
+                selectedRadioIndex = 0;
+            }
+
+            if (ImGui.radioButton("Panneaux arrêts", selectedRadioIndex == 1)) {
+                systemeRoutier.getIntersectionSelectionne().setSignalisation(new Arret());
+                selectedRadioIndex = 1;
+            }
+
+            if (ImGui.radioButton("Rien", selectedRadioIndex == 2)) {
+                systemeRoutier.getIntersectionSelectionne().setSignalisation(null);
+                selectedRadioIndex = 2;
+            }
+            // }
         }
-        if (ImGui.radioButton("Panneaux arrêts", selectedRadioIndex == 1)) {
-            selectedRadioIndex = 1;
-        }
-        // }
         ImGui.popStyleColor();
     }
     //Optimisation de la fonction boutonsUniversels

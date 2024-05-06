@@ -3,6 +3,7 @@ package jeu;
 import Outil.CouleurConsole;
 import Outil.MathLocal;
 import moteur.scene.Entite;
+import moteur.scene.Scene;
 import org.joml.Vector2f;
 
 import javax.security.auth.login.AccountNotFoundException;
@@ -25,6 +26,8 @@ public class Voiture extends Entite {
 
     private Vector2f positionLocale;
 
+    private boolean doitEtreArret;
+
     private int indexRoute;
 
     private float angle;
@@ -45,6 +48,12 @@ public class Voiture extends Entite {
 
     boolean doitEtreDetruite;
 
+    SystemeRoutier gps;
+
+    Scene scene;
+
+    Signalisation signalisation;
+
     private ArrayList<Vector2f> pointsRoute;
 
 
@@ -56,14 +65,15 @@ public class Voiture extends Entite {
      * @param maisonAAller maison d'arrivé de la voiture
      * @param gps reference au systeme routier
      */
-    public Voiture(String id, String idModel,Maison maisonDepart, Maison maisonAAller, SystemeRoutier gps) {
+    public Voiture(String id, String idModel, Maison maisonDepart, Maison maisonAAller, SystemeRoutier gps, Scene scene) {
         super(id, idModel);
 
         //définir la vitesse de base et l'accélération
         vitesse = 0;
-        vitesseMaximale = 2;
-        acceleration = 0.5f;
+        vitesseMaximale = 10;
+        acceleration = 0.1f;
         distanceEntrePoint = 0;
+        this.scene = scene;
 
         //plus tard
         indexRoute = 0;
@@ -75,8 +85,10 @@ public class Voiture extends Entite {
         this.maisonDepart = maisonDepart;
         this.maisonAAller = maisonAAller;
 
+        this.gps = gps;
         //définir le chemin à parcourir
-        chemin = gps.getChemin(maisonDepart,maisonAAller);
+        chemin = this.gps.getChemin(maisonDepart,maisonAAller);
+
 
         //mettre la route actuelle
         //définir le sens initiale que la voiture va
@@ -182,6 +194,31 @@ public class Voiture extends Entite {
     }
 
     public boolean mettreAJourVoiture(double temps) {
+
+
+        if (doitEtreArret) {
+
+            //if (!isVoituresTropProche())
+            //    doitEtreArret = false;
+            //regarder si on est arrêté à cause d'un stop
+            if (signalisation != null) {
+                if (signalisation.getClass() == Arret.class) {
+                    Arret arret = ((Arret) (signalisation));
+                    System.out.println(arret.dicoVoitureDuree);
+                    if ((System.currentTimeMillis() - arret.dicoVoitureDuree.get(this) > 3000)) {
+                        System.out.println("Trois Secondes!");
+                        doitEtreArret = false;
+                        arret.retirerVoiture(this);
+                        signalisation = null;
+                    }
+                }
+            }
+            else{}
+
+
+            return false;
+        }
+
         while (vitesse < vitesseMaximale)
             vitesse = (float) Math.min(vitesseMaximale,vitesse + (acceleration*temps));
         //setPositionLocale(getPositionLocale().x + getProchainPoint(temps).x,getPositionLocale().y + getProchainPoint(temps).y);
@@ -209,11 +246,33 @@ public class Voiture extends Entite {
 
         } catch (Exception e) {
 
-
             pointBase = getPointRoute().get(getPointRoute().size()-1);
-            //réagir lorsqu'on doit passer par une intersection (lorsqu'on finit la route)
-            updateRouteActuelle();
-            pointAAller = getPointRoute().get(0);
+            if (chemin.isEmpty()) {
+                //sens *= maisonAAller.getSensRouteLiee();
+                doitEtreDetruite = true;
+            }
+            else {
+                signalisation = Graph.getIntersectionEntreRoutes(routeActuelle, chemin.get(0)).getSignalisation();
+                if (signalisation != null) {
+                    if (signalisation.getClass() == Arret.class) {
+                        doitEtreArret = true;
+                        ((Arret) signalisation).ajouterVoiture(this);
+                    }
+                }
+                //réagir lorsqu'on doit passer par une intersection (lorsqu'on finit la route)
+                updateRouteActuelle();
+                pointAAller = getPointRoute().get(0);
+            }
+
+            //gérer le stop
+
+
+            //if (isVoituresTropProche()) {
+            //    System.out.println("Voiture trop proche");
+            //    return false;
+            //}
+
+
         }
 
         return doitEtreDetruite;
@@ -236,18 +295,12 @@ public class Voiture extends Entite {
     public void updateRouteActuelle() {
 
         //mettre le sens correctement
-        if (chemin.isEmpty()) {
-            //sens *= maisonAAller.getSensRouteLiee();
-            doitEtreDetruite = true;
-        }
-        else {
             //trouvez le sens que la voiture aura
-            sens *= (chemin.get(0).getIntersectionDepart() == routeActuelle.getIntersectionFin() ||
-                    chemin.get(0).getIntersectionFin() == routeActuelle.getIntersectionDepart()) ? 1 : -1;
-            routeActuelle = chemin.get(0);
-            chemin.remove(0);
-            routeActuelle.augmenterNombreUtilisation();
-        }
+        sens *= (chemin.get(0).getIntersectionDepart() == routeActuelle.getIntersectionFin() ||
+                chemin.get(0).getIntersectionFin() == routeActuelle.getIntersectionDepart()) ? 1 : -1;
+        routeActuelle = chemin.get(0);
+        chemin.remove(0);
+        routeActuelle.augmenterNombreUtilisation();
         //mettre la route actuelle
     }
 
@@ -279,5 +332,21 @@ public class Voiture extends Entite {
 
     public boolean isDoitEtreDetruite() {
         return doitEtreDetruite;
+    }
+
+    public boolean isVoituresTropProche() {
+        //regarder les collisions
+        for (Voiture voiture : scene.getVoitures()) {
+            if (voiture.getPositionLocale().distance(this.getPositionLocale()) < 1) {
+                System.out.println(voiture.getPositionLocale().distance(this.getPositionLocale()));
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    public void detruireVoiture() {
+        doitEtreArret = true;
     }
 }
