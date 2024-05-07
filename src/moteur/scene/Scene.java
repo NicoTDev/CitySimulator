@@ -11,6 +11,7 @@ import moteur.Graphique.TextureCache;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.MissingFormatArgumentException;
 
 /**
  * Classe responsable d'entreposer les éléments 3D du jeu
@@ -134,5 +135,26 @@ public class Scene {
 
     public void setVoitures(ArrayList<Voiture> voitures) {
         this.voitures = voitures;
+    }
+
+    public void nettoyerScene() {
+
+        intersections.forEach(Intersection::nettoyerIntersection);
+        routes.values().forEach(Route::nettoyerRoute);
+        maisons.forEach(Maison::nettoyerMaison);
+
+        for (String modelId : dicoModel.keySet().stream().toList()) {
+            System.out.println(modelId);
+            if (modelId.contains("model-Rue")
+             || modelId.contains("model-intersection")
+             || modelId.contains("model-arret")
+             || modelId.contains("model-lumiere")) {
+                dicoModel.remove(modelId);
+            }
+        }
+
+        intersections = new ArrayList<>();
+        routes = new HashMap<>();
+
     }
 }

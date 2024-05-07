@@ -55,4 +55,8 @@ public class Maison extends Entite {
     public int getNumero() {
         return numero;
     }
+
+    public void nettoyerMaison() {
+        routeReliee = null;
+    }
 }

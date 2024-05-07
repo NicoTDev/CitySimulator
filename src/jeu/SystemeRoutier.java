@@ -19,6 +19,10 @@ public class SystemeRoutier {
 
     Terrain terrain;
 
+    float vitesseRoulee;
+
+    int nombreVoiture;
+
     Route routeEnConstruction;
 
     Mode modeUtilisateur;
@@ -42,6 +46,9 @@ public class SystemeRoutier {
         this.intersectionSelectionne = null;
         routeEnConstruction = null;
         modeUtilisateur = Mode.CONSTRUCTEURDEROUTE;
+        vitesseRoulee = 10;
+        nombreVoiture = 6;
+
 
 
 
@@ -225,7 +232,7 @@ public class SystemeRoutier {
 
         //ici on initialise les valeurs de minimum et de maximum du terrain
         Vector2f t = new Vector2f();
-
+        System.out.println(scene.getRoutes().values());
         for (Route route : scene.getRoutes().values()) {
             //si le rayon traverse l'objet, on selectionne l'entite
             //dernier point
@@ -338,10 +345,11 @@ public class SystemeRoutier {
     }
 
     public void finirConstructionRoute() {
-        System.out.println(routeEnConstruction.getNombreSegments());
-        if (routeEnConstruction.getNombreSegments() == 1) {
-            scene.getRoutes().remove(routeEnConstruction.toString());
-            routeEnConstruction.getRouteModel().setEntites(new ArrayList<>());
+        if (routeEnConstruction != null) {
+            if (routeEnConstruction.getPointsBezier().size() == 2) {
+                scene.getRoutes().remove(routeEnConstruction.toString());
+                routeEnConstruction.getRouteModel().setEntites(new ArrayList<>());
+            }
         }
         routeEnConstruction = null;
 
@@ -349,6 +357,14 @@ public class SystemeRoutier {
 
     public Intersection getIntersectionSelectionne() {
         return intersectionSelectionne;
+    }
+
+    public float getVitesseRoulee() {
+        return vitesseRoulee;
+    }
+
+    public int getNombreVoiture() {
+        return nombreVoiture;
     }
 
     //pour rouler, si l'intersection de fin est l'intersection de debut, on fait rien, si l'intersection de fin de la route actuelle de la voiture est l'intersection de fin de la seconde route aussi, on fait *-1 au sens
