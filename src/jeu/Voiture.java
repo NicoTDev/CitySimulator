@@ -67,10 +67,10 @@ public class Voiture extends Entite {
      */
     public Voiture(String id, String idModel, Maison maisonDepart, Maison maisonAAller, SystemeRoutier gps, Scene scene) {
         super(id, idModel);
-
+        this.gps = gps;
         //définir la vitesse de base et l'accélération
         vitesse = 0;
-        vitesseMaximale = 10;
+        vitesseMaximale = gps.getVitesseRoulee();
         acceleration = 0.1f;
         distanceEntrePoint = 0;
         this.scene = scene;
@@ -221,6 +221,8 @@ public class Voiture extends Entite {
 
         while (vitesse < vitesseMaximale)
             vitesse = (float) Math.min(vitesseMaximale,vitesse + (acceleration*temps));
+        while (vitesse > vitesseMaximale)
+            vitesse = (float) Math.max(vitesseMaximale,vitesse - (acceleration*temps));
         //setPositionLocale(getPositionLocale().x + getProchainPoint(temps).x,getPositionLocale().y + getProchainPoint(temps).y);
         Vector2f dir;
         Vector2f vecteurSensRoute;
@@ -348,5 +350,9 @@ public class Voiture extends Entite {
 
     public void detruireVoiture() {
         doitEtreArret = true;
+    }
+
+    public void setVitesseMaximale(float vitesse) {
+        vitesseMaximale = vitesse;
     }
 }

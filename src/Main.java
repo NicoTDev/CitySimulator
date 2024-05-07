@@ -132,7 +132,7 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
         //générer des maison au depart
         //(int)(Math.random()*5+5)
-        for (int i = 0 ; i < (int)(Math.random()*5+6) ; i++) {
+        for (int i = 0 ; i < (int)(Math.random()*2+3) ; i++) {
             Maison maisonLocal = new Maison("maison-"+i,maisonModel.getId(),(float)Math.toRadians((float)(Math.random()*360)),scene,i+1);
             boolean positionCorrect;
             int precision = 0;
@@ -238,7 +238,7 @@ public class Main implements ILogiqueJeu, ILogiqueGui {
 
             try {
                 //ajouter des voitures
-                while (scene.getVoitures().size() < 6) {
+                while (scene.getVoitures().size() < systemeRoutier.getNombreVoiture()) {
                     Maison maisonDepart = scene.getMaisons().get((int)(Math.random()*scene.getMaisons().size()));
                     Maison maisonArrive;
                     do {

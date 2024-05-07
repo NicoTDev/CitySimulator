@@ -9,6 +9,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.lang.invoke.VolatileCallSite;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 
 public class Intersection {
@@ -247,5 +248,15 @@ public class Intersection {
         scene.ajouterModel(modelArret);
         modelLumiere = ModelLoader.loadModel("model-lumiere"+id,"ressources/models/lumiere/lumiere.obj",scene.getTextureCache());
         scene.ajouterModel(modelLumiere);
+    }
+
+    public ArrayList<Model> getModels() {
+        ArrayList<Model> models = new ArrayList<>();
+        return models;
+    }
+    public void nettoyerIntersection() {
+        modelIntersection.setEntites(new ArrayList<>());
+        modelLumiere.setEntites(new ArrayList<>());
+        modelArret.setEntites(new ArrayList<>());
     }
 }

@@ -4,8 +4,10 @@ import imgui.ImFont;
 import imgui.ImFontAtlas;
 import imgui.ImGui;
 import imgui.flag.ImGuiCol;
+import imgui.flag.ImGuiDragDropFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.internal.ImGuiWindow;
+import imgui.type.ImFloat;
 import moteur.scene.Scene;
 
 import java.awt.*;
@@ -96,6 +98,13 @@ public class Gui {
         //Personaliser un intersection
         ImGui.setCursorPos(0,170);
         chaqueBoutons(Mode.CUSTOMIZERINTERSECTION,"Personnaliseur d'intersections");
+
+        //créer le bouton pour réinitialiser
+        ImGui.setCursorPos(800,800);
+        if (ImGui.button("Réinitialiser le niveau")) {
+            systemeRoutier.finirConstructionRoute();
+            scene.nettoyerScene();
+        }
     }
     public void boutonsSpectateur(long tempsDépart){
         //Arrêter la simulation
@@ -115,6 +124,17 @@ public class Gui {
         ImGui.textWrapped("Temps écoulé : " + (int)((tempsActuel-tempsDépart)/1000) + " s");
         ImGui.popStyleColor();
 
+        ImGui.setCursorPos(10,800);
+        float[] valeurTemps = new float[]{systemeRoutier.vitesseRoulee};
+        ImGui.sliderFloat("Vitesse du temps",valeurTemps,0F,20F);
+        systemeRoutier.vitesseRoulee = valeurTemps[0];
+        scene.getVoitures().forEach(n->n.setVitesseMaximale(valeurTemps[0]));
+
+        ImGui.setCursorPos(10,850);
+        int[] valeurVoiture = new int[]{systemeRoutier.nombreVoiture};
+        ImGui.sliderInt("Nombre de voitures",valeurVoiture,0,60);
+        systemeRoutier.nombreVoiture = valeurVoiture[0];
+
         //Autre fenetre
         ImGui.setNextWindowSize(800, 800);
         ImGui.begin("Rapport",ImGuiWindowFlags.NoResize+ImGuiWindowFlags.AlwaysVerticalScrollbar);
@@ -131,8 +151,6 @@ public class Gui {
         ImGui.text("Nombre de fois utilisée :");
 
         int nombreUtilisationTotal = scene.getRoutes().values().stream().mapToInt(Route :: getNombreUtilisation).sum()+1;
-
-
         for(int i =0; i < scene.getRoutes().size();i++){
             int nombreUtilisation = scene.getRoutes().values().stream().sorted(Comparator.comparingInt(Route::getNombreUtilisation)).toList().reversed().get(i).getNombreUtilisation();
             float rougeAbsolu = (510 * nombreUtilisation)

@@ -176,11 +176,10 @@ public class Route {
         else
             material.getMeshList().set(0,routeMesh);
 
-        routeModel = new Model("model-id",materials);
+        routeModel = new Model(nomRoute,materials);
 
         routeEntite = new Entite("route-entite",routeModel.getId());
         scene.getDicoModel().put(routeEntite.getIdModel(),routeModel);
-
         scene.ajouterRoute(this);
 
         //for (Vector2f p : pointsRoute) {
@@ -472,4 +471,9 @@ public class Route {
     public Model getRouteModel() {
         return routeModel;
     }
+
+    public void nettoyerRoute() {
+        routeModel.setEntites(new ArrayList<>());
+    }
+
 }
