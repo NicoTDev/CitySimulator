@@ -140,7 +140,7 @@ public class SystemeRoutier {
                     Vector2f intersectionPoint = intersection.getPointsIntersection()[i];
 
                     //si on est sur une intersection
-                    if (Math.abs(intersectionPoint.x - point.x) < 0.25 && Math.abs(intersectionPoint.y - point.z) < 0.25) {
+                    if (Math.abs(intersectionPoint.x - point.x) < 0.25 && Math.abs(intersectionPoint.y - point.z) < 0.5) {
                         isSurIntersection = true;
                         if (intersection.getRoutesLiee()[i] == null ) {
 
@@ -177,7 +177,7 @@ public class SystemeRoutier {
             for (Maison maison : scene.getMaisons()) {
                 //si on est sur une maisom
                 if (maison.getRouteReliee() == null) {
-                    if (new Vector2f(maison.getPosition().x,maison.getPosition().z).distance(new Vector2f(point.x,point.z)) < 1) {
+                    if (new Vector2f(maison.getPosition().x,maison.getPosition().z).distance(new Vector2f(point.x,point.z)) < 2) {
                         isSurMaison = true;
                         //s'il n'a pas de route en construction, on démarre une route
                         if (routeEnConstruction == null) {

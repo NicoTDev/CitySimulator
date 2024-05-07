@@ -243,18 +243,6 @@ public class Gui {
         }
         ImGui.popStyleColor();
     }
-    //Optimisation de la fonction boutonsUniversels
-    public void chaqueBoutons(Mode mode,String nom){
-        if(systemeRoutier.modeUtilisateur == mode)
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(0,255,0,1));
-        else
-            ImGui.pushStyleColor(ImGuiCol.Button,ImGui.getColorU32(255,0,0,1));
-
-        if (ImGui.button(nom,430,70)) {
-            systemeRoutier.setModeUtilisateur(mode);
-        }
-        ImGui.popStyleColor();
-    }
 
 
 
